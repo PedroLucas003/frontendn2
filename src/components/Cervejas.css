@@ -1,0 +1,192 @@
+/* Estilos Vintage para Cards de Cerveja */
+.cervejas-section {
+  padding: 5rem 2rem;
+  background-color: #f1e8d8;
+  font-family: 'Space Mono', monospace;
+  background-image: url('https://images.unsplash.com/photo-1601662528567-526cd06f6582?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+  background-size: cover;
+  background-attachment: fixed;
+  background-blend-mode: overlay;
+}
+
+.section-title {
+  text-align: center;
+  font-size: 2.5rem;
+  color: #2c2925;
+  margin-bottom: 3rem;
+  font-weight: 700;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.section-title .destaque {
+  color: #8b5a2b;
+}
+
+.cervejas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: rgba(245, 241, 230, 0.85);
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.cerveja-card {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  transition: all 0.5s ease;
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.cerveja-card.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.cerveja-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+}
+
+.cerveja-imagem-container {
+  position: relative;
+  height: 350px;
+  overflow: hidden;
+}
+
+.cerveja-imagem {
+  height: 100%;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: transform 0.8s ease;
+}
+
+.cerveja-card:hover .cerveja-imagem {
+  transform: scale(1.1);
+}
+
+.cerveja-detalhes {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem;
+  background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+}
+
+.cerveja-tag {
+  background-color: #8b5a2b;
+  color: white;
+  padding: 0.5rem 1.5rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  letter-spacing: 2px;
+  border-radius: 4px;
+}
+
+.cerveja-ano {
+  color: #f5f1e6;
+  font-weight: 700;
+  font-size: 1.2rem;
+  background-color: rgba(44, 41, 37, 0.7);
+  padding: 0.3rem 0.8rem;
+  border-radius: 4px;
+}
+
+.cerveja-info {
+  padding: 1.8rem;
+  background-color: white;
+}
+
+.cerveja-info h3 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: #2c2925;
+  position: relative;
+  display: inline-block;
+}
+
+.cerveja-info h3::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 50px;
+  height: 2px;
+  background-color: #8b5a2b;
+}
+
+.cerveja-tipo {
+  color: #8b5a2b;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+}
+
+.cerveja-desc {
+  color: #5a4a42;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+/* Animações */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Delay para os cards */
+.cerveja-card:nth-child(1) { transition-delay: 0.1s; }
+.cerveja-card:nth-child(2) { transition-delay: 0.2s; }
+.cerveja-card:nth-child(3) { transition-delay: 0.3s; }
+.cerveja-card:nth-child(4) { transition-delay: 0.4s; }
+
+@media (max-width: 768px) {
+  .cervejas-section {
+    padding: 3rem 1rem;
+    background-attachment: scroll;
+  }
+  
+  .section-title {
+    font-size: 2rem;
+  }
+  
+  .cervejas-grid {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+    gap: 1.5rem;
+  }
+  
+  .cerveja-imagem-container {
+    height: 280px;
+  }
+}
+/* Efeito de pulse quando chega na seção via scroll */
+@keyframes pulseHighlight {
+  0% { box-shadow: 0 0 0 0 rgba(139, 90, 43, 0.4); }
+  70% { box-shadow: 0 0 0 15px rgba(139, 90, 43, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(139, 90, 43, 0); }
+}
+
+.scroll-activated {
+  animation: pulseHighlight 1s ease-out;
+}

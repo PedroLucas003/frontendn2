@@ -1,26 +1,107 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Login from './Login';
-import Dashboard from './Dashboard';
-import HeroBanner from './components/HeroBanner';
-import Cervejas from './components/Cervejas';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
+import AuthPage from './home/AuthPage';
+import BeerDashboard from './beers/BeerDashboard';
+import Navbar from './common/Navbar';
+import HeroBanner from './home/HeroBanner';
+import Cervejas from './beers/Cervejas';
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (token) {
+          const response = await axios.post('http://localhost:5000/validate-token', {}, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setIsAuthenticated(true);
+          setUser(response.data.user);
+        }
+      } catch (error) {
+        console.error('Erro na verificação de autenticação:', error);
+        setError('Falha ao verificar autenticação. Tente novamente.');
+        localStorage.removeItem('token');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
+    
+    // Limpar o error após 5 segundos
+    if (error) {
+      const timer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
+  const handleLogin = (token, userData) => {
+    localStorage.setItem('token', token);
+    setIsAuthenticated(true);
+    setUser(userData);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setIsAuthenticated(false);
+    setUser(null);
+  };
+
+  if (loading) {
+    return (
+      <div className="loading-screen">
+        <div className="spinner"></div>
+        <p>Carregando...</p>
+      </div>
+    );
+  }
+
   return (
     <Router>
       <div className="App">
-        <Routes>
-          <Route path="/" element={
-            <>
-              <HeroBanner />
-              <Cervejas />
-              {/* Outras seções podem ser adicionadas aqui */}
-            </>
-          } />
-          <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-        </Routes>
+        <Navbar isAuthenticated={isAuthenticated} onLogout={handleLogout} user={user} />
+        
+        {error && (
+          <div className="global-error">
+            {error}
+            <button onClick={() => setError(null)}>×</button>
+          </div>
+        )}
+        
+        <main className="main-content">
+          <Routes>
+            <Route path="/" element={
+              <>
+                <HeroBanner />
+                <Cervejas />
+              </>
+            } />
+            
+            <Route path="/auth" element={
+              isAuthenticated ? <Navigate to="/dashboard" replace /> : <AuthPage onLogin={handleLogin} />
+            } />
+            
+            <Route path="/dashboard" element={
+              isAuthenticated ? <BeerDashboard user={user} /> : <Navigate to="/auth" replace />
+            } />
+            
+            <Route path="*" element={
+              <Navigate to="/" replace />
+            } />
+          </Routes>
+        </main>
+        
+        <footer className="app-footer">
+          <p>Cervejaria Virada © {new Date().getFullYear()}</p>
+        </footer>
       </div>
     </Router>
   );

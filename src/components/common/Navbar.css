@@ -1,0 +1,12 @@
+.login-link {
+  padding: 0.5rem 1rem;
+  background-color: #4a6fa5;
+  color: white;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: background-color 0.3s;
+}
+
+.login-link:hover {
+  background-color: #3a5a80;
+}

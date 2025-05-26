@@ -6,6 +6,7 @@ import BeerDashboard from './components/beers/BeerDashboard';
 import Navbar from './components/common/Navbar';
 import HeroBanner from './components/home/HeroBanner';
 import Cervejas from './components/beers/Cervejas';
+import LoginPage from './components/home/LoginPage';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -35,7 +36,6 @@ function App() {
 
     checkAuth();
     
-    // Limpar o error após 5 segundos
     if (error) {
       const timer = setTimeout(() => setError(null), 5000);
       return () => clearTimeout(timer);
@@ -84,8 +84,12 @@ function App() {
               </>
             } />
             
+            <Route path="/login" element={
+              isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage onLogin={handleLogin} />
+            } />
+            
             <Route path="/dashboard" element={
-              isAuthenticated ? <BeerDashboard user={user} /> : <Navigate to="/" replace />
+              isAuthenticated ? <BeerDashboard user={user} /> : <Navigate to="/login" replace />
             } />
             
             <Route path="*" element={

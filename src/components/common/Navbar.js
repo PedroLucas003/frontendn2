@@ -19,7 +19,7 @@ const Navbar = ({ isAuthenticated, onLogout, user }) => {
             <button onClick={onLogout} className="logout-btn">Sair</button>
           </>
         ) : (
-          <Link to="/auth">Login</Link>
+          <Link to="/login" className="login-link">Login</Link>
         )}
       </div>
     </nav>

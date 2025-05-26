@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
-import AuthPage from './components/home/AuthPage';
 import BeerDashboard from './components/beers/BeerDashboard';
 import Navbar from './components/common/Navbar';
 import HeroBanner from './components/home/HeroBanner';
@@ -85,12 +84,8 @@ function App() {
               </>
             } />
             
-            <Route path="/auth" element={
-              isAuthenticated ? <Navigate to="/dashboard" replace /> : <AuthPage onLogin={handleLogin} />
-            } />
-            
             <Route path="/dashboard" element={
-              isAuthenticated ? <BeerDashboard user={user} /> : <Navigate to="/auth" replace />
+              isAuthenticated ? <BeerDashboard user={user} /> : <Navigate to="/" replace />
             } />
             
             <Route path="*" element={

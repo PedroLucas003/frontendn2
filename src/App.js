@@ -7,6 +7,7 @@ import Navbar from './components/common/Navbar';
 import HeroBanner from './components/home/HeroBanner';
 import Cervejas from './components/beers/Cervejas';
 import LoginPage from './components/home/LoginPage';
+import UserDashboard from './components/users/UserDashboard';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -19,7 +20,7 @@ function App() {
       try {
         const token = localStorage.getItem('token');
         if (token) {
-          const response = await axios.post('http://localhost:5000/validate-token', {}, {
+          const response = await axios.get('http://localhost:5000/api/auth/validate', {
             headers: { Authorization: `Bearer ${token}` }
           });
           setIsAuthenticated(true);
@@ -90,6 +91,10 @@ function App() {
             
             <Route path="/dashboard" element={
               isAuthenticated ? <BeerDashboard user={user} /> : <Navigate to="/login" replace />
+            } />
+            
+            <Route path="/users" element={
+              isAuthenticated ? <UserDashboard user={user} /> : <Navigate to="/login" replace />
             } />
             
             <Route path="*" element={

@@ -3,7 +3,6 @@ import './HeroBanner.css';
 
 const HeroBanner = () => {
   useEffect(() => {
-    // Animação de entrada do conteúdo
     const heroContent = document.querySelector('.hero-content');
     heroContent.style.opacity = 0;
     heroContent.style.transform = 'translateY(20px)';
@@ -19,19 +18,16 @@ const HeroBanner = () => {
     const element = document.getElementById('cervejas-section');
     const button = document.querySelector('.cta-button');
     
-    // Animação de clique no botão
     button.classList.add('button-clicked');
     setTimeout(() => {
       button.classList.remove('button-clicked');
     }, 300);
     
-    // Scroll suave com offset
     window.scrollTo({
       top: element.offsetTop - 30,
       behavior: 'smooth'
     });
     
-    // Ativa a animação na seção de cervejas
     setTimeout(() => {
       element.classList.add('scroll-activated');
       setTimeout(() => {
@@ -41,7 +37,7 @@ const HeroBanner = () => {
   };
 
   return (
-    <div className="hero-banner">
+    <section className="hero-banner">
       <div className="hero-overlay"></div>
       <div className="hero-content-container">
         <div className="hero-content">
@@ -60,7 +56,7 @@ const HeroBanner = () => {
           </button>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

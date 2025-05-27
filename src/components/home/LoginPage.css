@@ -68,3 +68,33 @@
   margin-bottom: 1rem;
   text-align: center;
 }
+.toggle-mode {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.toggle-button {
+  background: none;
+  border: none;
+  color: #4a90e2;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.5rem;
+  text-decoration: underline;
+}
+
+.toggle-button:hover {
+  color: #3a7bc8;
+}
+
+.login-error {
+  color: #ff4d4f;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+/* Ajuste para o formulário mais longo */
+.login-card {
+  min-height: auto;
+  padding: 2rem;
+}

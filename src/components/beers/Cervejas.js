@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import './Cervejas.css';
 
@@ -13,6 +13,7 @@ const Cervejas = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
   
   const cervejas = [
     {
@@ -57,49 +58,60 @@ const Cervejas = () => {
     }
   ];
 
-  useEffect(() => {
-    const fetchStock = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        
-        if (!token) {
-          throw new Error('Usuário não autenticado');
-        }
-
-        const response = await axios.get(`${API_URL}/api/beers`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-        
-        const newStock = {
-          'IPA': 0,
-          'Stout': 0,
-          'Weiss': 0,
-          'Pilsen': 0
-        };
-        
-        response.data.forEach(beer => {
-          if (newStock.hasOwnProperty(beer.beerType)) {
-            newStock[beer.beerType] = beer.quantity;
-          }
-        });
-        
-        setStock(newStock);
-        setError(null);
-      } catch (error) {
-        console.error('Erro ao buscar estoque:', error);
-        
-        if (error.response?.status === 401) {
-          window.location.href = '/login';
-        } else {
-          setError('Falha ao carregar estoque. Tente recarregar a página.');
-        }
-      } finally {
+  const fetchStock = useCallback(async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setError('Faça login para ver o estoque');
         setLoading(false);
+        return;
       }
-    };
 
+      const response = await axios.get(`${API_URL}/api/beers`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        timeout: 5000
+      });
+      
+      const newStock = {
+        'IPA': 0,
+        'Stout': 0,
+        'Weiss': 0,
+        'Pilsen': 0
+      };
+      
+      response.data.forEach(beer => {
+        if (newStock.hasOwnProperty(beer.beerType)) {
+          newStock[beer.beerType] += beer.quantity;
+        }
+      });
+      
+      setStock(newStock);
+      setError(null);
+    } catch (error) {
+      console.error('Erro ao buscar estoque:', error);
+      
+      if (error.response?.status === 401) {
+        setError('Faça login para ver o estoque');
+      } else if (error.code === 'ECONNABORTED' || error.message === 'Network Error') {
+        if (retryCount < 2) {
+          setRetryCount(prev => prev + 1);
+          setTimeout(fetchStock, 2000 * retryCount);
+          return;
+        }
+        setError('Servidor demorando para responder. Tente novamente mais tarde.');
+      } else {
+        setError('Falha ao carregar estoque. Tente recarregar a página.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [retryCount]);
+
+  useEffect(() => {
     fetchStock();
 
     const setupAnimation = () => {
@@ -111,7 +123,10 @@ const Cervejas = () => {
               entry.target.classList.add('visible');
             }
           });
-        }, { threshold: 0.1 });
+        }, { 
+          threshold: 0.1,
+          rootMargin: '0px 0px -50px 0px'
+        });
 
         cards.forEach(card => observer.observe(card));
         return () => cards.forEach(card => observer.unobserve(card));
@@ -120,9 +135,15 @@ const Cervejas = () => {
 
     const animationTimer = setTimeout(setupAnimation, 100);
     return () => clearTimeout(animationTimer);
-  }, []); // Removida a dependência API_URL pois é uma constante
+  }, [fetchStock]);
 
-  if (loading) {
+  const handleReload = () => {
+    setRetryCount(0);
+    setError(null);
+    fetchStock();
+  };
+
+  if (loading && !error) {
     return (
       <section id="cervejas-section" className="cervejas-section">
         <div className="loading-indicator">
@@ -141,10 +162,16 @@ const Cervejas = () => {
         <div className="error-message">
           <p>{error}</p>
           <button 
-            onClick={() => window.location.reload()} 
+            onClick={handleReload} 
             className="reload-btn"
+            disabled={loading}
           >
-            <span className="reload-icon">↻</span> Recarregar
+            {loading ? (
+              <span className="loading-icon">⏳</span>
+            ) : (
+              <span className="reload-icon">↻</span>
+            )}
+            Recarregar
           </button>
         </div>
       )}
@@ -157,6 +184,7 @@ const Cervejas = () => {
                 src={cerveja.imagem}
                 alt={cerveja.nome}
                 className="cerveja-imagem"
+                loading="lazy"
                 onError={(e) => {
                   e.target.onerror = null;
                   e.target.src = "https://via.placeholder.com/400x500.png?text=Garrafa+Virada";

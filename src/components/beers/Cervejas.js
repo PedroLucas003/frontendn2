@@ -13,7 +13,6 @@ const Cervejas = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [retryCount, setRetryCount] = useState(0);
   
   const cervejas = [
     {
@@ -64,6 +63,12 @@ const Cervejas = () => {
       const token = localStorage.getItem('token');
       
       if (!token) {
+        setStock({
+          'IPA': 0,
+          'Stout': 0,
+          'Weiss': 0,
+          'Pilsen': 0
+        });
         setError('Faça login para ver o estoque');
         setLoading(false);
         return;
@@ -96,20 +101,13 @@ const Cervejas = () => {
       
       if (error.response?.status === 401) {
         setError('Faça login para ver o estoque');
-      } else if (error.code === 'ECONNABORTED' || error.message === 'Network Error') {
-        if (retryCount < 2) {
-          setRetryCount(prev => prev + 1);
-          setTimeout(fetchStock, 2000 * retryCount);
-          return;
-        }
-        setError('Servidor demorando para responder. Tente novamente mais tarde.');
       } else {
         setError('Falha ao carregar estoque. Tente recarregar a página.');
       }
     } finally {
       setLoading(false);
     }
-  }, [retryCount]);
+  }, []); // Removida a dependência retryCount pois não é mais usada
 
   useEffect(() => {
     fetchStock();
@@ -138,7 +136,6 @@ const Cervejas = () => {
   }, [fetchStock]);
 
   const handleReload = () => {
-    setRetryCount(0);
     setError(null);
     fetchStock();
   };
@@ -201,9 +198,15 @@ const Cervejas = () => {
               <p className="cerveja-desc">{cerveja.descricao}</p>
               <div className="cerveja-stock">
                 <span className="stock-label">Estoque:</span>
-                <span className={`stock-value ${stock[cerveja.beerType] > 0 ? 'in-stock' : 'out-of-stock'}`}>
-                  {stock[cerveja.beerType]} unidades
-                </span>
+                {localStorage.getItem('token') ? (
+                  <span className={`stock-value ${stock[cerveja.beerType] > 0 ? 'in-stock' : 'out-of-stock'}`}>
+                    {stock[cerveja.beerType]} unidades
+                  </span>
+                ) : (
+                  <span className="stock-value login-required">
+                    <a href="/login">Faça login para ver</a>
+                  </span>
+                )}
               </div>
               <span className="cerveja-teor">{cerveja.teor}</span>
             </div>

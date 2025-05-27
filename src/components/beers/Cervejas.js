@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './Cervejas.css';
 
@@ -11,9 +11,8 @@ const Cervejas = () => {
     'Weiss': 0,
     'Pilsen': 0
   });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  
+  const [loading, setLoading] = useState(false);
+
   const cervejas = [
     {
       id: 1,
@@ -57,59 +56,33 @@ const Cervejas = () => {
     }
   ];
 
-  const fetchStock = useCallback(async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        setStock({
+  useEffect(() => {
+    const fetchStock = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`${API_URL}/api/beers`);
+        
+        const newStock = {
           'IPA': 0,
           'Stout': 0,
           'Weiss': 0,
           'Pilsen': 0
+        };
+        
+        response.data.forEach(beer => {
+          if (newStock.hasOwnProperty(beer.beerType)) {
+            newStock[beer.beerType] = beer.quantity;
+          }
         });
-        setError('Faça login para ver o estoque');
+        
+        setStock(newStock);
+      } catch (error) {
+        console.error('Erro ao buscar estoque:', error);
+      } finally {
         setLoading(false);
-        return;
       }
+    };
 
-      const response = await axios.get(`${API_URL}/api/beers`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
-        timeout: 5000
-      });
-      
-      const newStock = {
-        'IPA': 0,
-        'Stout': 0,
-        'Weiss': 0,
-        'Pilsen': 0
-      };
-      
-      response.data.forEach(beer => {
-        if (newStock.hasOwnProperty(beer.beerType)) {
-          newStock[beer.beerType] += beer.quantity;
-        }
-      });
-      
-      setStock(newStock);
-      setError(null);
-    } catch (error) {
-      console.error('Erro ao buscar estoque:', error);
-      
-      if (error.response?.status === 401) {
-        setError('Faça login para ver o estoque');
-      } else {
-        setError('Falha ao carregar estoque. Tente recarregar a página.');
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, []); // Removida a dependência retryCount pois não é mais usada
-
-  useEffect(() => {
     fetchStock();
 
     const setupAnimation = () => {
@@ -133,43 +106,16 @@ const Cervejas = () => {
 
     const animationTimer = setTimeout(setupAnimation, 100);
     return () => clearTimeout(animationTimer);
-  }, [fetchStock]);
-
-  const handleReload = () => {
-    setError(null);
-    fetchStock();
-  };
-
-  if (loading && !error) {
-    return (
-      <section id="cervejas-section" className="cervejas-section">
-        <div className="loading-indicator">
-          <div className="spinner"></div>
-          <p>Carregando estoque...</p>
-        </div>
-      </section>
-    );
-  }
+  }, []);
 
   return (
     <section id="cervejas-section" className="cervejas-section">
       <h2 className="section-title">Nossas <span className="destaque">Cervejas</span> Históricas</h2>
-      
-      {error && (
-        <div className="error-message">
-          <p>{error}</p>
-          <button 
-            onClick={handleReload} 
-            className="reload-btn"
-            disabled={loading}
-          >
-            {loading ? (
-              <span className="loading-icon">⏳</span>
-            ) : (
-              <span className="reload-icon">↻</span>
-            )}
-            Recarregar
-          </button>
+
+      {loading && (
+        <div className="loading-indicator">
+          <div className="spinner"></div>
+          <p>Atualizando estoque...</p>
         </div>
       )}
 
@@ -198,15 +144,9 @@ const Cervejas = () => {
               <p className="cerveja-desc">{cerveja.descricao}</p>
               <div className="cerveja-stock">
                 <span className="stock-label">Estoque:</span>
-                {localStorage.getItem('token') ? (
-                  <span className={`stock-value ${stock[cerveja.beerType] > 0 ? 'in-stock' : 'out-of-stock'}`}>
-                    {stock[cerveja.beerType]} unidades
-                  </span>
-                ) : (
-                  <span className="stock-value login-required">
-                    <a href="/login">Faça login para ver</a>
-                  </span>
-                )}
+                <span className={`stock-value ${stock[cerveja.beerType] > 0 ? 'in-stock' : 'out-of-stock'}`}>
+                  {stock[cerveja.beerType]} unidades
+                </span>
               </div>
               <span className="cerveja-teor">{cerveja.teor}</span>
             </div>

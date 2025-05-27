@@ -3,6 +3,8 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './UserDashboard.css';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const UserDashboard = ({ user }) => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -15,7 +17,7 @@ const UserDashboard = ({ user }) => {
         const fetchUsers = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const response = await axios.get('http://localhost:5000/api/users', {
+                const response = await axios.get(`${API_URL}/api/users`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setUsers(response.data);
@@ -37,7 +39,7 @@ const UserDashboard = ({ user }) => {
 
         try {
             const token = localStorage.getItem('token');
-            await axios.delete(`http://localhost:5000/api/users/${userId}`, {
+            await axios.delete(`${API_URL}/api/users/${userId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setUsers(users.filter(u => u._id !== userId));
@@ -126,7 +128,6 @@ const UserDashboard = ({ user }) => {
                             </div>
                         </div>
                     ))}
-
                 </div>
             )}
         </div>

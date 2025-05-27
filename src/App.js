@@ -9,6 +9,8 @@ import Cervejas from './components/beers/Cervejas';
 import LoginPage from './components/home/LoginPage';
 import UserDashboard from './components/users/UserDashboard';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
@@ -20,7 +22,7 @@ function App() {
       try {
         const token = localStorage.getItem('token');
         if (token) {
-          const response = await axios.get('http://localhost:5000/api/auth/validate', {
+          const response = await axios.get(`${API_URL}/api/auth/validate`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           setIsAuthenticated(true);

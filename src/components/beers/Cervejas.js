@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import './Cervejas.css';
 import axios from 'axios';
+import './Cervejas.css';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const Cervejas = () => {
   const [stock, setStock] = useState({
@@ -57,9 +59,8 @@ const Cervejas = () => {
   useEffect(() => {
     const fetchStock = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/beers');
+        const response = await axios.get(`${API_URL}/api/beers`);
         
-        // Cria um novo objeto de estoque baseado nos dados da API
         const newStock = {
           'IPA': 0,
           'Stout': 0,
@@ -67,7 +68,6 @@ const Cervejas = () => {
           'Pilsen': 0
         };
         
-        // Atualiza as quantidades com os dados da API
         response.data.forEach(beer => {
           if (newStock.hasOwnProperty(beer.beerType)) {
             newStock[beer.beerType] = beer.quantity;
@@ -77,7 +77,6 @@ const Cervejas = () => {
         setStock(newStock);
       } catch (error) {
         console.error('Erro ao buscar estoque:', error);
-        // Mantém os valores padrão (0) em caso de erro
       } finally {
         setLoading(false);
       }
@@ -85,7 +84,6 @@ const Cervejas = () => {
 
     fetchStock();
 
-    // Configuração da animação dos cards
     const setupAnimation = () => {
       const cards = document.querySelectorAll('.cerveja-card');
       if (cards.length > 0) {
@@ -102,7 +100,6 @@ const Cervejas = () => {
       }
     };
 
-    // Aguarda um pouco para garantir que os cards foram renderizados
     const animationTimer = setTimeout(setupAnimation, 100);
     return () => clearTimeout(animationTimer);
   }, []);

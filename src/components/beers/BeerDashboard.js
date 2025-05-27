@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './BeerDashboard.css';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const BeerDashboard = () => {
   const [beers, setBeers] = useState([]);
   const [formData, setFormData] = useState({
@@ -13,10 +15,9 @@ const BeerDashboard = () => {
 
   const beerTypes = ['Pilsen', 'IPA', 'Stout', 'Weiss'];
 
-  // Buscar cervejas
   const fetchBeers = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/beers');
+      const response = await axios.get(`${API_URL}/api/beers`);
       setBeers(response.data);
       setError('');
     } catch (err) {
@@ -29,7 +30,6 @@ const BeerDashboard = () => {
     fetchBeers();
   }, []);
 
-  // Manipular mudanças no formulário
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -38,14 +38,13 @@ const BeerDashboard = () => {
     }));
   };
 
-  // Enviar formulário
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       if (editingId) {
-        await axios.put(`http://localhost:5000/api/beers/${editingId}`, formData);
+        await axios.put(`${API_URL}/api/beers/${editingId}`, formData);
       } else {
-        await axios.post('http://localhost:5000/api/beers', formData);
+        await axios.post(`${API_URL}/api/beers`, formData);
       }
       fetchBeers();
       setFormData({ beerType: 'Pilsen', quantity: 0 });
@@ -56,7 +55,6 @@ const BeerDashboard = () => {
     }
   };
 
-  // Editar cerveja
   const handleEdit = (beer) => {
     setFormData({
       beerType: beer.beerType,
@@ -65,11 +63,10 @@ const BeerDashboard = () => {
     setEditingId(beer._id);
   };
 
-  // Deletar cerveja
   const handleDelete = async (id) => {
     if (window.confirm('Tem certeza que deseja excluir esta cerveja?')) {
       try {
-        await axios.delete(`http://localhost:5000/api/beers/${id}`);
+        await axios.delete(`${API_URL}/api/beers/${id}`);
         fetchBeers();
       } catch (err) {
         setError('Erro ao excluir cerveja');

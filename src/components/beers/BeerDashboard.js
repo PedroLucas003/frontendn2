@@ -15,16 +15,22 @@ const BeerDashboard = () => {
 
   const beerTypes = ['Pilsen', 'IPA', 'Stout', 'Weiss'];
 
-  const fetchBeers = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/api/beers`);
-      setBeers(response.data);
-      setError('');
-    } catch (err) {
-      setError('Erro ao carregar cervejas');
-      console.error(err);
+const fetchBeers = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_URL}/api/beers`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    setBeers(response.data);
+  } catch (err) {
+    if (err.response?.status === 401) {
+      window.location.href = '/login';
     }
-  };
+    setError('Erro ao carregar cervejas');
+  }
+};
 
   useEffect(() => {
     fetchBeers();
@@ -38,22 +44,29 @@ const BeerDashboard = () => {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (editingId) {
-        await axios.put(`${API_URL}/api/beers/${editingId}`, formData);
-      } else {
-        await axios.post(`${API_URL}/api/beers`, formData);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const token = localStorage.getItem('token');
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`
       }
-      fetchBeers();
-      setFormData({ beerType: 'Pilsen', quantity: 0 });
-      setEditingId(null);
-    } catch (err) {
-      setError('Erro ao salvar cerveja');
-      console.error(err);
+    };
+
+    if (editingId) {
+      await axios.put(`${API_URL}/api/beers/${editingId}`, formData, config);
+    } else {
+      await axios.post(`${API_URL}/api/beers`, formData, config);
     }
-  };
+    fetchBeers();
+  } catch (err) {
+    if (err.response?.status === 401) {
+      window.location.href = '/login';
+    }
+    setError('Erro ao salvar cerveja');
+  }
+};
 
   const handleEdit = (beer) => {
     setFormData({

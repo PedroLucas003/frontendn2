@@ -12,6 +12,7 @@ const Cervejas = () => {
     'Pilsen': 0
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   
   const cervejas = [
     {
@@ -59,7 +60,17 @@ const Cervejas = () => {
   useEffect(() => {
     const fetchStock = async () => {
       try {
-        const response = await axios.get(`${API_URL}/api/beers`);
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+          throw new Error('Usuário não autenticado');
+        }
+
+        const response = await axios.get(`${API_URL}/api/beers`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
         
         const newStock = {
           'IPA': 0,
@@ -75,8 +86,15 @@ const Cervejas = () => {
         });
         
         setStock(newStock);
+        setError(null);
       } catch (error) {
         console.error('Erro ao buscar estoque:', error);
+        
+        if (error.response?.status === 401) {
+          window.location.href = '/login';
+        } else {
+          setError('Falha ao carregar estoque. Tente recarregar a página.');
+        }
       } finally {
         setLoading(false);
       }
@@ -102,12 +120,15 @@ const Cervejas = () => {
 
     const animationTimer = setTimeout(setupAnimation, 100);
     return () => clearTimeout(animationTimer);
-  }, []);
+  }, []); // Removida a dependência API_URL pois é uma constante
 
   if (loading) {
     return (
       <section id="cervejas-section" className="cervejas-section">
-        <div className="loading-indicator">Carregando estoque...</div>
+        <div className="loading-indicator">
+          <div className="spinner"></div>
+          <p>Carregando estoque...</p>
+        </div>
       </section>
     );
   }
@@ -115,6 +136,19 @@ const Cervejas = () => {
   return (
     <section id="cervejas-section" className="cervejas-section">
       <h2 className="section-title">Nossas <span className="destaque">Cervejas</span> Históricas</h2>
+      
+      {error && (
+        <div className="error-message">
+          <p>{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="reload-btn"
+          >
+            <span className="reload-icon">↻</span> Recarregar
+          </button>
+        </div>
+      )}
+
       <div className="cervejas-grid">
         {cervejas.map((cerveja) => (
           <div key={cerveja.id} className="cerveja-card">

@@ -26,7 +26,7 @@
 Node.js v16+
 npm ou yarn
 
-git clone https://github.com/seu-usuario/cervejaria-virada.git
+git clone https://github.com/PedroLucas003/frontendn2.git
 cd client
 npm install
 cp .env.example .env

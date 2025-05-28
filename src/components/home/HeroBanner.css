@@ -9,6 +9,8 @@
   justify-content: center;
   overflow: hidden;
   background-color: #2c3e50;
+  margin-top: -80px; /* Compensa a altura do navbar */
+  padding-top: 80px; /* Garante que o conteúdo não fique escondido */
 }
 
 .hero-banner::before {
@@ -41,6 +43,7 @@
   align-items: center;
   justify-content: center;
   text-align: center;
+  padding-top: 80px; /* Garante espaço para o navbar */
 }
 
 .hero-content {

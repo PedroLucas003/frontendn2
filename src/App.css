@@ -368,3 +368,12 @@ body {
   margin-top: -80px;
   padding-top: 80px;
 }
+/* Adicione isso ao seu App.css */
+body {
+  padding-top: 0; /* Remove o padding-top global */
+}
+
+/* Garante que as seções não fiquem escondidas */
+section {
+  scroll-margin-top: 80px;
+}

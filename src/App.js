@@ -104,10 +104,6 @@ function App() {
             } />
           </Routes>
         </main>
-        
-        <footer className="app-footer">
-          <p>Cervejaria Virada © {new Date().getFullYear()}</p>
-        </footer>
       </div>
     </Router>
   );

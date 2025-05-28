@@ -1,4 +1,4 @@
-/* UserDashboard.css - Versão Consistente com BeerDashboard */
+/* UserDashboard.css - Versão Atualizada */
 
 /* Estilos Gerais */
 .user-dashboard {
@@ -10,6 +10,7 @@
   background-color: #f5f6fa;
   border-radius: 15px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  margin-top: 80px; /* Espaço para o navbar */
   animation: fadeIn 0.6s ease-out;
 }
 
@@ -97,6 +98,7 @@
   background-color: #fff;
 }
 
+/* Botão Adicionar com Degradê */
 .add-user-btn {
   padding: 0.75rem 1.5rem;
   border: none;
@@ -105,7 +107,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  background-color: #2ecc71;
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
   color: white;
   box-shadow: 0 4px 6px rgba(46, 204, 113, 0.2);
   display: flex;
@@ -114,7 +116,7 @@
 }
 
 .add-user-btn:hover {
-  background-color: #27ae60;
+  background: linear-gradient(135deg, #27ae60, #219653);
   transform: translateY(-2px);
   box-shadow: 0 6px 10px rgba(46, 204, 113, 0.3);
 }
@@ -173,6 +175,7 @@
   margin-top: 1.5rem;
 }
 
+/* Botões de Ação com Degradê */
 .edit-btn, .delete-btn {
   flex: 1;
   padding: 0.6rem 1rem;
@@ -186,25 +189,24 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-}
-
-.edit-btn {
-  background-color: #3498db;
   color: white;
 }
 
+.edit-btn {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+}
+
 .edit-btn:hover {
-  background-color: #2980b9;
+  background: linear-gradient(135deg, #2980b9, #1a6ca3);
   transform: translateY(-2px);
 }
 
 .delete-btn {
-  background-color: #e74c3c;
-  color: white;
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
 }
 
 .delete-btn:hover {
-  background-color: #c0392b;
+  background: linear-gradient(135deg, #c0392b, #a52714);
   transform: translateY(-2px);
 }
 
@@ -261,7 +263,8 @@
 @media (max-width: 768px) {
   .user-dashboard {
     padding: 1rem;
-    margin: 1rem;
+    margin: 1rem 1rem 1rem 1rem;
+    margin-top: 80px;
   }
   
   .controls {

@@ -353,3 +353,18 @@ h1, h2, h3, h4, h5, h6 {
     font-size: 1.4rem;
   }
 }
+css
+.main-content {
+  padding-top: 80px; /* Altura do navbar */
+  min-height: calc(100vh - 80px); /* Ajusta a altura considerando o navbar */
+}
+/* Garante que o conteúdo principal não fique escondido atrás do navbar */
+body {
+  padding-top: 80px;
+}
+
+/* Melhora a visualização do navbar transparente */
+.hero-banner, .cervejas-section {
+  margin-top: -80px;
+  padding-top: 80px;
+}

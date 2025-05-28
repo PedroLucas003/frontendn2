@@ -1,5 +1,5 @@
 .navbar {
-  background: rgba(44, 62, 80, 0.9); /* Fundo semi-transparente por padrão */
+  background: transparent; /* Fundo totalmente transparente */
   color: white;
   padding: 1.5rem 2rem;
   display: flex;
@@ -11,12 +11,12 @@
   right: 0;
   z-index: 1000;
   transition: all 0.3s ease;
-  backdrop-filter: blur(10px); /* Efeito de blur para melhor legibilidade */
 }
 
 .navbar.scrolled {
+  background: rgba(44, 62, 80, 0.9); /* Fundo só aparece ao scrollar */
+  backdrop-filter: blur(10px);
   box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
-  /* Mantemos o mesmo estilo que o normal agora */
 }
 
 .navbar-brand a {

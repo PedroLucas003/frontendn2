@@ -7,6 +7,7 @@
     <b>Frontend:</b> React.js | <b>Backend:</b> Node.js/Express | <b>Database:</b> MongoDB Atlas
   </p>
 </div>
+![image](https://github.com/user-attachments/assets/a3305029-aa85-46c1-ac71-652cc55ba0d5)
 
 ## 🌐 Demonstração Online
 

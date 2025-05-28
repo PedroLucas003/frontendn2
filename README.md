@@ -8,6 +8,18 @@
   </p>
 </div>
 
+## 🌐 Demonstração Online
+
+[![Acesse o Site](https://img.shields.io/badge/🌐_Acesse_o_Site_Online-FF7139?style=for-the-badge&logo=amazonaws&logoColor=white)](http://projeto-n2-aws.s3-website-us-east-1.amazonaws.com)
+
+<div align="center">
+  <a href="http://projeto-n2-aws.s3-website-us-east-1.amazonaws.com" target="_blank">
+    <img src="https://user-images.githubusercontent.com/46093689/180642389-e5b1c7b8-eea4-4fba-8e7e-78e5c8c1f8d2.png" alt="Preview do Site" width="600"/>
+    <br/>
+    <strong>Clique na imagem para acessar o site</strong>
+  </a>
+</div>
+
 ---
 
 ## 📌 Índice

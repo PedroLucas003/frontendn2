@@ -7,9 +7,10 @@
     <b>Frontend:</b> React.js | <b>Backend:</b> Node.js/Express | <b>Database:</b> MongoDB Atlas
   </p>
 </div>
-![image](https://img.shields.io/badge/🌐_Acesse_o_Site_Online-FF7139?style=for-the-badge&logo=amazonaws&logoColor=white)](http://projeto-n2-aws.s3-website-us-east-1.amazonaws.com)
 
 ## 🌐 Demonstração Online
+
+[![Acesse o Site](https://img.shields.io/badge/🌐_Acesse_o_Site_Online-FF7139?style=for-the-badge&logo=amazonaws&logoColor=white)](http://projeto-n2-aws.s3-website-us-east-1.amazonaws.com)
 
 <div align="center">
   <a href="http://projeto-n2-aws.s3-website-us-east-1.amazonaws.com" target="_blank">

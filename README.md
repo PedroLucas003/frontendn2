@@ -15,7 +15,6 @@
 <div align="center">
   <a href="http://projeto-n2-aws.s3-website-us-east-1.amazonaws.com" target="_blank">
     <br/>
-    <strong>Clique na imagem para acessar o site</strong>
   </a>
 </div>
 

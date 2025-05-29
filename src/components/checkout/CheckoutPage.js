@@ -4,7 +4,7 @@ import { initMercadoPago, Wallet } from '@mercadopago/sdk-react';
 import './CheckoutPage.css';
 
 // Inicializa o Mercado Pago com sua chave pública
-initMercadoPago('APP_USR-0b3d3f11-7988-4acb-8fd7-d623fede2a91', { locale: 'pt-BR' });
+initMercadoPago('APP_USR-0b3d3f11-7988-4acb-8fd7-d623fede2a91', { locale: 'pt-BR' }); 
 
 const CheckoutPage = ({ cartItems, updateCart }) => {
   const [deliveryData, setDeliveryData] = useState({

@@ -9,7 +9,7 @@ import Cervejas from './components/beers/Cervejas';
 import LoginPage from './components/home/LoginPage';
 import UserDashboard from './components/users/UserDashboard';
 import CheckoutPage from './components/checkout/CheckoutPage';
-import OrderSuccessPage from './components/order/OrderSuccessPage';
+import OrderSuccessPage from './components/checkout/OrderSuccessPage';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 

@@ -8,6 +8,7 @@ import HeroBanner from './components/home/HeroBanner';
 import Cervejas from './components/beers/Cervejas';
 import LoginPage from './components/home/LoginPage';
 import UserDashboard from './components/users/UserDashboard';
+import CheckoutPage from './components/checkout/CheckoutPage';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -16,6 +17,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [cart, setCart] = useState([]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -57,6 +59,10 @@ function App() {
     setUser(null);
   };
 
+  const updateCart = (newCart) => {
+    setCart(newCart);
+  };
+
   if (loading) {
     return (
       <div className="loading-screen">
@@ -69,7 +75,12 @@ function App() {
   return (
     <Router>
       <div className="App">
-        <Navbar isAuthenticated={isAuthenticated} onLogout={handleLogout} user={user} />
+        <Navbar 
+          isAuthenticated={isAuthenticated} 
+          onLogout={handleLogout} 
+          user={user} 
+          cartItems={cart.length}
+        />
         
         {error && (
           <div className="global-error">
@@ -83,7 +94,7 @@ function App() {
             <Route path="/" element={
               <>
                 <HeroBanner />
-                <Cervejas />
+                <Cervejas cart={cart} updateCart={updateCart} />
               </>
             } />
             
@@ -97,6 +108,10 @@ function App() {
             
             <Route path="/users" element={
               isAuthenticated ? <UserDashboard user={user} /> : <Navigate to="/login" replace />
+            } />
+            
+            <Route path="/checkout" element={
+              <CheckoutPage cartItems={cart} />
             } />
             
             <Route path="*" element={

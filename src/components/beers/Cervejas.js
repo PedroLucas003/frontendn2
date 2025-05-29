@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import './Cervejas.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -12,6 +13,9 @@ const Cervejas = () => {
     'Pilsen': 0
   });
   const [loading, setLoading] = useState(false);
+  const [cart, setCart] = useState([]);
+  const [showCart, setShowCart] = useState(false);
+  const navigate = useNavigate();
 
   const cervejas = [
     {
@@ -55,6 +59,53 @@ const Cervejas = () => {
       ano: "1905"
     }
   ];
+
+  const addToCart = (cerveja) => {
+    setCart(prevCart => {
+      const existingItem = prevCart.find(item => item.id === cerveja.id);
+      if (existingItem) {
+        return prevCart.map(item =>
+          item.id === cerveja.id 
+            ? { ...item, quantity: item.quantity + 1 } 
+            : item
+        );
+      } else {
+        return [...prevCart, { ...cerveja, quantity: 1 }];
+      }
+    });
+    setShowCart(true);
+  };
+
+  const removeFromCart = (id) => {
+    setCart(prevCart => prevCart.filter(item => item.id !== id));
+  };
+
+  const updateQuantity = (id, newQuantity) => {
+    if (newQuantity < 1) {
+      removeFromCart(id);
+      return;
+    }
+    setCart(prevCart =>
+      prevCart.map(item =>
+        item.id === id ? { ...item, quantity: newQuantity } : item
+      )
+    );
+  };
+
+  const getTotalItems = () => {
+    return cart.reduce((total, item) => total + item.quantity, 0);
+  };
+
+  const getTotalPrice = () => {
+    return cart.reduce((total, item) => {
+      const price = 15.90;
+      return total + (price * item.quantity);
+    }, 0).toFixed(2);
+  };
+
+  const proceedToCheckout = () => {
+    navigate('/checkout');
+  };
 
   useEffect(() => {
     const fetchStock = async () => {
@@ -137,6 +188,14 @@ const Cervejas = () => {
                 <div className="cerveja-tag">Virada</div>
                 <div className="cerveja-ano">{cerveja.ano}</div>
               </div>
+              <button 
+                className="add-to-cart-btn"
+                onClick={() => addToCart(cerveja)}
+                disabled={stock[cerveja.beerType] <= 0}
+              >
+                <i className="fas fa-shopping-cart"></i>
+                {stock[cerveja.beerType] > 0 ? 'Adicionar' : 'Esgotado'}
+              </button>
             </div>
             <div className="cerveja-info">
               <h3>{cerveja.nome}</h3>
@@ -153,6 +212,74 @@ const Cervejas = () => {
           </div>
         ))}
       </div>
+
+      <div className={`cart-icon ${getTotalItems() > 0 ? 'has-items' : ''}`} onClick={() => setShowCart(!showCart)}>
+        <i className="fas fa-shopping-cart"></i>
+        {getTotalItems() > 0 && <span className="cart-count">{getTotalItems()}</span>}
+      </div>
+
+      <div className={`cart-sidebar ${showCart ? 'open' : ''}`}>
+        <div className="cart-header">
+          <h3>Seu Carrinho</h3>
+          <button className="close-cart" onClick={() => setShowCart(false)}>
+            <i className="fas fa-times"></i>
+          </button>
+        </div>
+        
+        {cart.length === 0 ? (
+          <div className="empty-cart">
+            <i className="fas fa-shopping-cart"></i>
+            <p>Seu carrinho está vazio</p>
+          </div>
+        ) : (
+          <>
+            <div className="cart-items">
+              {cart.map(item => (
+                <div key={item.id} className="cart-item">
+                  <img src={item.imagem} alt={item.nome} className="cart-item-image" />
+                  <div className="cart-item-details">
+                    <h4>{item.nome}</h4>
+                    <p className="cart-item-type">{item.tipo}</p>
+                    <div className="cart-item-quantity">
+                      <button onClick={() => updateQuantity(item.id, item.quantity - 1)}>
+                        <i className="fas fa-minus"></i>
+                      </button>
+                      <span>{item.quantity}</span>
+                      <button onClick={() => updateQuantity(item.id, item.quantity + 1)}>
+                        <i className="fas fa-plus"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="cart-item-price">
+                    R$ {(15.90 * item.quantity).toFixed(2)}
+                    <button 
+                      className="remove-item" 
+                      onClick={() => removeFromCart(item.id)}
+                    >
+                      <i className="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="cart-summary">
+              <div className="cart-total">
+                <span>Total:</span>
+                <span>R$ {getTotalPrice()}</span>
+              </div>
+              <button 
+                className="checkout-btn"
+                onClick={proceedToCheckout}
+              >
+                Finalizar Compra
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+      
+      {showCart && <div className="cart-overlay" onClick={() => setShowCart(false)}></div>}
     </section>
   );
 };

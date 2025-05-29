@@ -58,10 +58,15 @@ function App() {
     localStorage.removeItem('token');
     setIsAuthenticated(false);
     setUser(null);
+    setCart([]); // Limpa o carrinho ao fazer logout
   };
 
   const updateCart = (newCart) => {
     setCart(newCart);
+  };
+
+  const clearCart = () => {
+    setCart([]);
   };
 
   if (loading) {
@@ -72,7 +77,6 @@ function App() {
       </div>
     );
   }
-  
 
   return (
     <Router>
@@ -113,11 +117,15 @@ function App() {
             } />
             
             <Route path="/checkout" element={
-              <CheckoutPage cartItems={cart} />
+              <CheckoutPage cartItems={cart} updateCart={updateCart} />
             } />
             
             <Route path="/order-success" element={
-              isAuthenticated ? <OrderSuccessPage /> : <Navigate to="/login" replace />
+              isAuthenticated ? (
+                <OrderSuccessPage clearCart={clearCart} />
+              ) : (
+                <Navigate to="/login" replace />
+              )
             } />
             
             <Route path="*" element={

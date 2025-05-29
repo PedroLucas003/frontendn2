@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useLocation, useNavigate } from 'react-router-dom';
 import './OrderSuccessPage.css';
 
-const OrderSuccessPage = () => {
+const OrderSuccessPage = ({ clearCart }) => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -15,6 +15,11 @@ const OrderSuccessPage = () => {
   const preferenceId = searchParams.get('preference_id');
 
   useEffect(() => {
+    // Limpa o carrinho quando a página é carregada
+    if (clearCart) {
+      clearCart();
+    }
+
     const fetchOrder = async () => {
       try {
         let orderData;
@@ -65,7 +70,7 @@ const OrderSuccessPage = () => {
     };
 
     fetchOrder();
-  }, [paymentId, preferenceId, navigate]);
+  }, [paymentId, preferenceId, navigate, clearCart]);
 
   if (loading) return <div className="loading">Carregando...</div>;
   if (error) return <div className="error">{error}</div>;

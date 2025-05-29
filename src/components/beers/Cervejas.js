@@ -5,7 +5,7 @@ import './Cervejas.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-const Cervejas = () => {
+const Cervejas = ({ cart, addToCart, updateCart }) => {
   const [stock, setStock] = useState({
     'IPA': 0,
     'Stout': 0,
@@ -13,7 +13,6 @@ const Cervejas = () => {
     'Pilsen': 0
   });
   const [loading, setLoading] = useState(false);
-  const [cart, setCart] = useState([]);
   const [showCart, setShowCart] = useState(false);
   const navigate = useNavigate();
 
@@ -60,24 +59,8 @@ const Cervejas = () => {
     }
   ];
 
-  const addToCart = (cerveja) => {
-    setCart(prevCart => {
-      const existingItem = prevCart.find(item => item.id === cerveja.id);
-      if (existingItem) {
-        return prevCart.map(item =>
-          item.id === cerveja.id 
-            ? { ...item, quantity: item.quantity + 1 } 
-            : item
-        );
-      } else {
-        return [...prevCart, { ...cerveja, quantity: 1 }];
-      }
-    });
-    setShowCart(true);
-  };
-
   const removeFromCart = (id) => {
-    setCart(prevCart => prevCart.filter(item => item.id !== id));
+    updateCart(cart.filter(item => item.id !== id));
   };
 
   const updateQuantity = (id, newQuantity) => {
@@ -85,8 +68,8 @@ const Cervejas = () => {
       removeFromCart(id);
       return;
     }
-    setCart(prevCart =>
-      prevCart.map(item =>
+    updateCart(
+      cart.map(item =>
         item.id === id ? { ...item, quantity: newQuantity } : item
       )
     );

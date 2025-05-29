@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useLocation, useNavigate } from 'react-router-dom';
 import './OrderSuccessPage.css';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const OrderSuccessPage = ({ clearCart }) => {
   const [order, setOrder] = useState(null);
@@ -37,7 +39,7 @@ const OrderSuccessPage = ({ clearCart }) => {
           
           // Busca o pedido no seu backend
           const orderResponse = await axios.get(
-            `${process.env.REACT_APP_API_URL}/api/payments/order-status/${response.data.order.id}`,
+            `${API_URL}/api/payments/order-status/${response.body.order.id}`,
             {
               headers: {
                 Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -48,7 +50,7 @@ const OrderSuccessPage = ({ clearCart }) => {
           orderData = orderResponse.data;
         } else if (preferenceId) {
           const response = await axios.get(
-            `${process.env.REACT_APP_API_URL}/api/payments/order-status/${preferenceId}`, 
+            `${API_URL}/api/payments/order-status/${preferenceId}`, 
             {
               headers: {
                 Authorization: `Bearer ${localStorage.getItem('token')}`

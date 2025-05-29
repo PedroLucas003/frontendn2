@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { initMercadoPago, Wallet } from '@mercadopago/sdk-react';
+import { useNavigate } from 'react-router-dom';
 import './CheckoutPage.css';
 
 // Inicializa o Mercado Pago com sua chave pública
 initMercadoPago('APP_USR-0b3d3f11-7988-4acb-8fd7-d623fede2a91', { locale: 'pt-BR' }); 
 
-const CheckoutPage = ({ cartItems, updateCart }) => {
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+const CheckoutPage = ({ cartItems, updateCart, clearCart }) => {
   const [deliveryData, setDeliveryData] = useState({
     cep: '',
     address: '',
@@ -19,11 +22,10 @@ const CheckoutPage = ({ cartItems, updateCart }) => {
 
   const [shippingOptions, setShippingOptions] = useState([]);
   const [selectedShipping, setSelectedShipping] = useState(null);
-  const [paymentMethod] = useState('credit_card');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [preferenceId, setPreferenceId] = useState(null);
-  const [orderData, setOrderData] = useState(null);
+  const navigate = useNavigate();
 
   const ITEM_PRICE = 15.90;
 
@@ -110,73 +112,40 @@ const CheckoutPage = ({ cartItems, updateCart }) => {
         throw new Error('Preencha todos os dados de entrega');
       }
 
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Usuário não autenticado');
+      }
+
       const response = await axios.post(
-        'https://api.mercadopago.com/checkout/preferences',
+        `${API_URL}/api/payments/create-preference`,
         {
-          items: cartItems.map(item => ({
-            title: item.nome,
-            unit_price: parseFloat(ITEM_PRICE),
-            quantity: item.quantity,
-            description: item.tipo,
-            picture_url: item.imagem || 'https://via.placeholder.com/100x150.png?text=Cerveja+Virada',
-            currency_id: 'BRL'
-          })),
-          payer: {
-            name: "Cliente",
-            email: "cliente@example.com",
-            address: {
-              zip_code: deliveryData.cep.replace(/\D/g, ''),
-              street_name: deliveryData.address,
-              street_number: deliveryData.number,
-              neighborhood: deliveryData.neighborhood,
-              city: deliveryData.city,
-              federal_unit: deliveryData.state
-            }
-          },
-          shipments: {
-            cost: parseFloat(selectedShipping.Valor.replace(',', '.')),
-            mode: "custom"
-          },
-          back_urls: {
-            success: `${window.location.origin}/order-success`,
-            failure: `${window.location.origin}/order-failure`,
-            pending: `${window.location.origin}/order-pending`
-          },
-          auto_return: "approved",
-          notification_url: "https://your-backend-url.com/api/mercadopago/webhook",
-          statement_descriptor: "VIRADA CERVEJA"
+          items: cartItems,
+          deliveryData,
+          shippingOption: selectedShipping
         },
         {
           headers: {
-            'Authorization': `Bearer APP_USR-1033194409526725-052912-384749a140d7670bc8e8bd57e1bff0c8-585645372`,
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         }
       );
 
       setPreferenceId(response.data.id);
-      setOrderData({
-        items: cartItems,
-        delivery: deliveryData,
-        shipping: selectedShipping,
-        paymentMethod,
-        total: calculateTotal(),
-        mpPreferenceId: response.data.id
-      });
       
       return response.data;
     } catch (error) {
-      setError(error.response?.data?.message || 'Erro ao criar pagamento. Tente novamente.');
+      setError(error.response?.data?.error || 'Erro ao criar pagamento. Tente novamente.');
       throw error;
     } finally {
       setIsLoading(false);
     }
-  }, [cartItems, deliveryData, selectedShipping, paymentMethod, calculateTotal, ITEM_PRICE]);
+  }, [cartItems, deliveryData, selectedShipping]);
 
   const handleCheckout = useCallback(async () => {
     try {
-      const preference = await createMercadoPagoPreference();
-      console.log('Preferência criada:', preference.id);
+      await createMercadoPagoPreference();
     } catch (error) {
       console.error('Erro no checkout:', error);
     }
@@ -191,8 +160,10 @@ const CheckoutPage = ({ cartItems, updateCart }) => {
   };
 
   useEffect(() => {
-    setPreferenceId(null);
-  }, [cartItems]);
+    if (cartItems.length === 0) {
+      navigate('/');
+    }
+  }, [cartItems, navigate]);
 
   return (
     <div className="checkout-container">
@@ -389,15 +360,15 @@ const CheckoutPage = ({ cartItems, updateCart }) => {
           
           <div className="order-total-section">
             <div className="order-summary-row">
-              <span>Subtotal</span>
+              <span>Subtotal:</span>
               <span>R$ {calculateItemsTotal()}</span>
             </div>
             <div className="order-summary-row">
-              <span>Frete</span>
+              <span>Frete:</span>
               <span>{selectedShipping ? `R$ ${selectedShipping.Valor}` : 'Calcular frete'}</span>
             </div>
             <div className="order-total-row">
-              <span>Total</span>
+              <span>Total:</span>
               <span>R$ {calculateTotal()}</span>
             </div>
             

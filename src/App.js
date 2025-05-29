@@ -18,7 +18,10 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState(() => {
+    const savedCart = localStorage.getItem('cart');
+    return savedCart ? JSON.parse(savedCart) : [];
+  });
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -48,6 +51,11 @@ function App() {
     }
   }, [error]);
 
+  // Atualiza o localStorage sempre que o carrinho mudar
+  useEffect(() => {
+    localStorage.setItem('cart', JSON.stringify(cart));
+  }, [cart]);
+
   const handleLogin = (token, userData) => {
     localStorage.setItem('token', token);
     setIsAuthenticated(true);
@@ -56,17 +64,33 @@ function App() {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('cart');
     setIsAuthenticated(false);
     setUser(null);
-    setCart([]); // Limpa o carrinho ao fazer logout
+    setCart([]);
   };
 
-  const updateCart = (newCart) => {
-    setCart(newCart);
+  const addToCart = (item) => {
+    setCart(prevCart => {
+      const existingItem = prevCart.find(cartItem => cartItem.id === item.id);
+      if (existingItem) {
+        return prevCart.map(cartItem =>
+          cartItem.id === item.id 
+            ? { ...cartItem, quantity: cartItem.quantity + 1 } 
+            : cartItem
+        );
+      }
+      return [...prevCart, { ...item, quantity: 1 }];
+    });
+  };
+
+  const updateCart = (updatedCart) => {
+    setCart(updatedCart);
   };
 
   const clearCart = () => {
     setCart([]);
+    localStorage.removeItem('cart');
   };
 
   if (loading) {
@@ -100,7 +124,11 @@ function App() {
             <Route path="/" element={
               <>
                 <HeroBanner />
-                <Cervejas cart={cart} updateCart={updateCart} />
+                <Cervejas 
+                  cart={cart} 
+                  addToCart={addToCart} 
+                  updateCart={updateCart} 
+                />
               </>
             } />
             
@@ -117,15 +145,11 @@ function App() {
             } />
             
             <Route path="/checkout" element={
-              <CheckoutPage cartItems={cart} updateCart={updateCart} />
+              <CheckoutPage cartItems={cart} updateCart={updateCart} clearCart={clearCart} />
             } />
             
             <Route path="/order-success" element={
-              isAuthenticated ? (
-                <OrderSuccessPage clearCart={clearCart} />
-              ) : (
-                <Navigate to="/login" replace />
-              )
+              <OrderSuccessPage clearCart={clearCart} />
             } />
             
             <Route path="*" element={

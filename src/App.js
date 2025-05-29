@@ -9,6 +9,7 @@ import Cervejas from './components/beers/Cervejas';
 import LoginPage from './components/home/LoginPage';
 import UserDashboard from './components/users/UserDashboard';
 import CheckoutPage from './components/checkout/CheckoutPage';
+import OrderSuccessPage from './components/order/OrderSuccessPage';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -71,6 +72,7 @@ function App() {
       </div>
     );
   }
+  
 
   return (
     <Router>
@@ -112,6 +114,10 @@ function App() {
             
             <Route path="/checkout" element={
               <CheckoutPage cartItems={cart} />
+            } />
+            
+            <Route path="/order-success" element={
+              isAuthenticated ? <OrderSuccessPage /> : <Navigate to="/login" replace />
             } />
             
             <Route path="*" element={

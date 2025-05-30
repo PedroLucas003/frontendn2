@@ -17,6 +17,7 @@ const BeerDashboard = () => {
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchBeers = async () => {
     try {
@@ -30,7 +31,15 @@ const BeerDashboard = () => {
       const response = await axios.get(`${API_URL}/api/beers`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setBeers(response.data);
+      
+      // Garante que os preços sejam números
+      const beersWithValidPrices = response.data.map(beer => ({
+        ...beer,
+        price: Number(beer.price) || 0,
+        quantity: Number(beer.quantity) || 0
+      }));
+      
+      setBeers(beersWithValidPrices);
       setError('');
     } catch (err) {
       if (err.response?.status === 401) {
@@ -58,7 +67,12 @@ const BeerDashboard = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitting(true);
     try {
+      if (formData.quantity < 0 || formData.price <= 0) {
+        throw new Error('Quantidade e preço devem ser valores positivos');
+      }
+
       const token = localStorage.getItem('token');
       const config = {
         headers: { Authorization: `Bearer ${token}` }
@@ -84,20 +98,22 @@ const BeerDashboard = () => {
       if (err.response?.status === 401) {
         window.location.href = '/login';
       } else {
-        setError(err.response?.data?.error || 'Erro ao salvar cerveja');
+        setError(err.response?.data?.error || err.message || 'Erro ao salvar cerveja');
         console.error('Erro ao salvar cerveja:', err);
       }
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleEdit = (beer) => {
     setFormData({
-      beerType: beer.beerType,
-      description: beer.description,
-      alcoholContent: beer.alcoholContent,
-      yearCreated: beer.yearCreated,
-      quantity: beer.quantity,
-      price: beer.price
+      beerType: beer.beerType || '',
+      description: beer.description || '',
+      alcoholContent: beer.alcoholContent || '',
+      yearCreated: beer.yearCreated || '',
+      quantity: Number(beer.quantity) || 0,
+      price: Number(beer.price) || 15.90
     });
     setEditingId(beer._id);
   };
@@ -205,8 +221,18 @@ const BeerDashboard = () => {
               </div>
             </div>
 
-            <button type="submit" className="submit-btn">
-              {editingId ? 'Atualizar' : 'Adicionar'}
+            <button 
+              type="submit" 
+              className="submit-btn"
+              disabled={submitting}
+            >
+              {submitting ? (
+                <span className="submitting-text">
+                  {editingId ? 'Atualizando...' : 'Adicionando...'}
+                </span>
+              ) : (
+                editingId ? 'Atualizar' : 'Adicionar'
+              )}
             </button>
             {editingId && (
               <button 
@@ -254,7 +280,7 @@ const BeerDashboard = () => {
                       <td>{beer.alcoholContent}</td>
                       <td>{beer.yearCreated}</td>
                       <td>{beer.quantity}</td>
-                      <td>R$ {beer.price.toFixed(2)}</td>
+                      <td>R$ {beer.price?.toFixed ? beer.price.toFixed(2) : '0.00'}</td>
                       <td>
                         <button onClick={() => handleEdit(beer)}>Editar</button>
                         <button onClick={() => handleDelete(beer._id)}>Excluir</button>

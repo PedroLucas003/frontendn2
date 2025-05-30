@@ -15,7 +15,15 @@ const Cervejas = ({ cart, addToCart, updateCart }) => {
     try {
       setLoading(true);
       const response = await axios.get(`${API_URL}/api/beers`);
-      setBeers(response.data);
+      // Garantir valores padrão para campos numéricos
+      const beersWithDefaults = response.data.map(beer => ({
+        ...beer,
+        price: Number(beer.price) || 0,
+        quantity: Number(beer.quantity) || 0,
+        yearCreated: beer.yearCreated || 'N/A',
+        alcoholContent: beer.alcoholContent || 'N/A'
+      }));
+      setBeers(beersWithDefaults);
     } catch (error) {
       console.error('Erro ao buscar cervejas:', error);
     } finally {
@@ -40,12 +48,12 @@ const Cervejas = ({ cart, addToCart, updateCart }) => {
   };
 
   const getTotalItems = () => {
-    return cart.reduce((total, item) => total + item.quantity, 0);
+    return cart.reduce((total, item) => total + (item.quantity || 0), 0);
   };
 
   const getTotalPrice = () => {
     return cart.reduce((total, item) => {
-      return total + (item.preco * item.quantity);
+      return total + ((item.preco || 0) * (item.quantity || 0));
     }, 0).toFixed(2);
   };
 
@@ -177,7 +185,7 @@ const Cervejas = ({ cart, addToCart, updateCart }) => {
                     </div>
                   </div>
                   <div className="cart-item-price">
-                    R$ {(item.preco * item.quantity).toFixed(2)}
+                    R$ {((item.preco || 0) * (item.quantity || 0)).toFixed(2)}
                     <button 
                       className="remove-item" 
                       onClick={() => removeFromCart(item.id)}

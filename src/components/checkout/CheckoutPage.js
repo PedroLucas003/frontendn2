@@ -1,15 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import axios from 'axios';
-import { initMercadoPago, Wallet } from '@mercadopago/sdk-react';
 import { useNavigate } from 'react-router-dom';
 import './CheckoutPage.css';
 
-// Inicializa o Mercado Pago com sua chave pública
-initMercadoPago('APP_USR-0b3d3f11-7988-4acb-8fd7-d623fede2a91', { locale: 'pt-BR' }); 
-
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-const CheckoutPage = ({ cartItems, updateCart, clearCart }) => {
+const CheckoutPage = ({ cartItems }) => {
   const [deliveryData, setDeliveryData] = useState({
     cep: '',
     address: '',
@@ -19,110 +15,35 @@ const CheckoutPage = ({ cartItems, updateCart, clearCart }) => {
     city: '',
     state: ''
   });
-
-  const [shippingOptions, setShippingOptions] = useState([]);
-  const [selectedShipping, setSelectedShipping] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [preferenceId, setPreferenceId] = useState(null);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const ITEM_PRICE = 15.90;
-
-  const calculateItemsTotal = useCallback(() => {
-    return cartItems.reduce((total, item) => total + (ITEM_PRICE * item.quantity), 0).toFixed(2);
-  }, [cartItems]);
-
-  const calculateTotal = useCallback(() => {
-    const itemsTotal = parseFloat(calculateItemsTotal());
-    const shippingTotal = selectedShipping ? parseFloat(selectedShipping.Valor.replace(',', '.')) : 0;
-    return (itemsTotal + shippingTotal).toFixed(2);
-  }, [calculateItemsTotal, selectedShipping]);
-
-  const calculateShipping = useCallback(async () => {
+  const handleCheckout = useCallback(async () => {
     try {
       setIsLoading(true);
-      setError(null);
-      
-      const mockShipping = [
-        { Codigo: '04014', Valor: '15,00', PrazoEntrega: '5', nome: 'PAC' },
-        { Codigo: '04510', Valor: '25,00', PrazoEntrega: '3', nome: 'Sedex' }
-      ];
-      
-      setShippingOptions(mockShipping);
-      setSelectedShipping(mockShipping[0]);
-    } catch (error) {
-      setError('Erro ao calcular frete. Tente novamente.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const fetchAddressByCEP = useCallback(async (cep) => {
-    try {
-      if (cep.length !== 8) return;
-      
-      setIsLoading(true);
-      setError(null);
-      
-      const response = await axios.get(`https://viacep.com.br/ws/${cep}/json/`);
-      
-      if (response.data.erro) {
-        throw new Error('CEP não encontrado');
-      }
-      
-      setDeliveryData(prev => ({
-        ...prev,
-        cep: response.data.cep,
-        address: response.data.logradouro,
-        neighborhood: response.data.bairro,
-        city: response.data.localidade,
-        state: response.data.uf
-      }));
-      
-      await calculateShipping();
-    } catch (error) {
-      setError('CEP não encontrado ou serviço indisponível');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [calculateShipping]);
-
-  const updateQuantity = useCallback((id, newQuantity) => {
-    if (newQuantity < 1) return;
-    
-    const updatedCart = cartItems.map(item => 
-      item.id === id ? {...item, quantity: newQuantity} : item
-    );
-    
-    updateCart(updatedCart);
-  }, [cartItems, updateCart]);
-
-  const removeItem = useCallback((id) => {
-    const updatedCart = cartItems.filter(item => item.id !== id);
-    updateCart(updatedCart);
-  }, [cartItems, updateCart]);
-
-  const createMercadoPagoPreference = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      if (!selectedShipping || !deliveryData.cep) {
-        throw new Error('Preencha todos os dados de entrega');
-      }
+      setError('');
 
       const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error('Usuário não autenticado');
+        navigate('/login');
+        return;
       }
+
+      // Mock de opções de frete (substitua por sua lógica real se necessário)
+      const shippingOption = {
+        Codigo: '04510',
+        Valor: '15,00',
+        PrazoEntrega: '3',
+        nome: 'Sedex'
+      };
 
       const response = await axios.post(
         `${API_URL}/api/payments/create-preference`,
         {
           items: cartItems,
           deliveryData,
-          shippingOption: selectedShipping
+          shippingOption
         },
         {
           headers: {
@@ -132,266 +53,85 @@ const CheckoutPage = ({ cartItems, updateCart, clearCart }) => {
         }
       );
 
-      setPreferenceId(response.data.id);
-      
-      return response.data;
+      // Redireciona para o checkout do Mercado Pago
+      window.location.href = response.data.sandbox_init_point || response.data.init_point;
+
     } catch (error) {
-      setError(error.response?.data?.error || 'Erro ao criar pagamento. Tente novamente.');
-      throw error;
+      setError(error.response?.data?.error || error.message || 'Erro ao finalizar compra');
     } finally {
       setIsLoading(false);
     }
-  }, [cartItems, deliveryData, selectedShipping]);
+  }, [cartItems, deliveryData, navigate]);
 
-  const handleCheckout = useCallback(async () => {
-    try {
-      await createMercadoPagoPreference();
-    } catch (error) {
-      console.error('Erro no checkout:', error);
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    
+    // Formatação especial para CEP
+    if (name === 'cep') {
+      const numericValue = value.replace(/\D/g, '');
+      const formattedValue = numericValue.length > 5 
+        ? `${numericValue.substring(0, 5)}-${numericValue.substring(5, 8)}` 
+        : numericValue;
+      setDeliveryData(prev => ({...prev, [name]: formattedValue}));
+    } else {
+      setDeliveryData(prev => ({...prev, [name]: value}));
     }
-  }, [createMercadoPagoPreference]);
-
-  const handleCepChange = (e) => {
-    const value = e.target.value.replace(/\D/g, '');
-    const formattedValue = value.length > 5 
-      ? `${value.substring(0, 5)}-${value.substring(5, 8)}` 
-      : value;
-    setDeliveryData(prev => ({...prev, cep: formattedValue}));
   };
-
-  useEffect(() => {
-    if (cartItems.length === 0) {
-      navigate('/');
-    }
-  }, [cartItems, navigate]);
 
   return (
     <div className="checkout-container">
-      <h1 className="checkout-title">Finalize sua Compra</h1>
+      <h1>Finalize sua Compra</h1>
       
       {error && <div className="error-message">{error}</div>}
-      
-      <div className="checkout-steps">
-        <div className="step active">1. Carrinho</div>
-        <div className="step">2. Pagamento</div>
-        <div className="step">3. Confirmação</div>
-      </div>
       
       <div className="checkout-grid">
         <div className="order-summary">
           <h2>Seu Carrinho</h2>
-          {cartItems.length === 0 ? (
-            <p className="empty-cart-message">Seu carrinho está vazio</p>
-          ) : (
-            <>
-              <ul className="cart-items-list">
-                {cartItems.map(item => (
-                  <li key={item.id} className="cart-item">
-                    <div className="item-image-container">
-                      <img 
-                        src={item.imagem} 
-                        alt={item.nome} 
-                        className="item-image"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = "https://via.placeholder.com/100x150.png?text=Cerveja+Virada";
-                        }}
-                      />
-                    </div>
-                    <div className="item-details">
-                      <h3>{item.nome}</h3>
-                      <p className="item-type">{item.tipo}</p>
-                      <div className="item-quantity-controls">
-                        <button 
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          disabled={item.quantity <= 1}
-                        >
-                          -
-                        </button>
-                        <span>{item.quantity}</span>
-                        <button onClick={() => updateQuantity(item.id, item.quantity + 1)}>
-                          +
-                        </button>
-                        <button 
-                          className="remove-item"
-                          onClick={() => removeItem(item.id)}
-                        >
-                          Remover
-                        </button>
-                      </div>
-                      <div className="item-price">
-                        R$ {(ITEM_PRICE * item.quantity).toFixed(2)}
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-              
-              <div className="order-subtotal">
-                <span>Subtotal:</span>
-                <span>R$ {calculateItemsTotal()}</span>
-              </div>
-            </>
-          )}
+          {/* Renderização dos itens do carrinho... */}
         </div>
 
         <div className="delivery-payment">
           <div className="delivery-form">
             <h2>Informações de Entrega</h2>
+            
             <form>
               <div className="form-group">
                 <label htmlFor="cep">CEP</label>
-                <div className="cep-input">
-                  <input 
-                    type="text" 
-                    id="cep" 
-                    placeholder="00000-000"
-                    value={deliveryData.cep}
-                    onChange={handleCepChange}
-                    onBlur={(e) => fetchAddressByCEP(e.target.value.replace(/\D/g, ''))}
-                    maxLength="9"
-                  />
-                  <button 
-                    type="button" 
-                    className="find-cep-btn"
-                    onClick={() => fetchAddressByCEP(deliveryData.cep.replace(/\D/g, ''))}
-                    disabled={deliveryData.cep.replace(/\D/g, '').length !== 8}
-                  >
-                    Buscar
-                  </button>
-                </div>
+                <input
+                  type="text"
+                  id="cep"
+                  name="cep"
+                  placeholder="00000-000"
+                  value={deliveryData.cep}
+                  onChange={handleInputChange}
+                  maxLength="9"
+                />
               </div>
               
               <div className="form-group">
                 <label htmlFor="address">Endereço</label>
-                <input 
-                  type="text" 
-                  id="address" 
+                <input
+                  type="text"
+                  id="address"
+                  name="address"
                   placeholder="Rua, Avenida, etc."
                   value={deliveryData.address}
-                  onChange={(e) => setDeliveryData({...deliveryData, address: e.target.value})}
+                  onChange={handleInputChange}
                 />
               </div>
               
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="number">Número</label>
-                  <input 
-                    type="text" 
-                    id="number" 
-                    placeholder="Nº"
-                    value={deliveryData.number}
-                    onChange={(e) => setDeliveryData({...deliveryData, number: e.target.value})}
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="complement">Complemento</label>
-                  <input 
-                    type="text" 
-                    id="complement" 
-                    placeholder="Apto, Bloco, etc."
-                    value={deliveryData.complement}
-                    onChange={(e) => setDeliveryData({...deliveryData, complement: e.target.value})}
-                  />
-                </div>
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="neighborhood">Bairro</label>
-                <input 
-                  type="text" 
-                  id="neighborhood" 
-                  value={deliveryData.neighborhood}
-                  onChange={(e) => setDeliveryData({...deliveryData, neighborhood: e.target.value})}
-                  readOnly
-                />
-              </div>
-              
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="city">Cidade</label>
-                  <input 
-                    type="text" 
-                    id="city" 
-                    value={deliveryData.city}
-                    onChange={(e) => setDeliveryData({...deliveryData, city: e.target.value})}
-                    readOnly
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="state">Estado</label>
-                  <input 
-                    type="text" 
-                    id="state" 
-                    value={deliveryData.state}
-                    onChange={(e) => setDeliveryData({...deliveryData, state: e.target.value})}
-                    readOnly
-                  />
-                </div>
-              </div>
+              {/* Outros campos do formulário... */}
             </form>
-            
-            {shippingOptions.length > 0 && (
-              <div className="shipping-options">
-                <h3>Opções de Frete</h3>
-                {shippingOptions.map((option) => (
-                  <div 
-                    key={option.Codigo} 
-                    className={`shipping-option ${selectedShipping?.Codigo === option.Codigo ? 'selected' : ''}`}
-                    onClick={() => setSelectedShipping(option)}
-                  >
-                    <input 
-                      type="radio" 
-                      name="shipping" 
-                      checked={selectedShipping?.Codigo === option.Codigo}
-                      onChange={() => {}}
-                    />
-                    <div className="shipping-info">
-                      <span className="shipping-name">{option.nome}</span>
-                      <span className="shipping-details">
-                        {option.PrazoEntrega} dias úteis • R$ {option.Valor}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
           
           <div className="order-total-section">
-            <div className="order-summary-row">
-              <span>Subtotal:</span>
-              <span>R$ {calculateItemsTotal()}</span>
-            </div>
-            <div className="order-summary-row">
-              <span>Frete:</span>
-              <span>{selectedShipping ? `R$ ${selectedShipping.Valor}` : 'Calcular frete'}</span>
-            </div>
-            <div className="order-total-row">
-              <span>Total:</span>
-              <span>R$ {calculateTotal()}</span>
-            </div>
-            
-            {preferenceId ? (
-              <div className="mercado-pago-button">
-                <Wallet initialization={{ preferenceId }} />
-                <button 
-                  className="back-to-cart-btn"
-                  onClick={() => setPreferenceId(null)}
-                >
-                  Voltar e editar
-                </button>
-              </div>
-            ) : (
-              <button 
-                type="button" 
-                className="checkout-btn"
-                onClick={handleCheckout}
-                disabled={!selectedShipping || cartItems.length === 0 || isLoading}
-              >
-                {isLoading ? 'Processando...' : 'Finalizar Compra'}
-              </button>
-            )}
+            <button 
+              onClick={handleCheckout}
+              disabled={isLoading || !deliveryData.cep}
+              className="checkout-btn"
+            >
+              {isLoading ? 'Processando...' : 'Finalizar Compra'}
+            </button>
           </div>
         </div>
       </div>

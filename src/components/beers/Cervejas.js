@@ -104,9 +104,8 @@ const Cervejas = () => {
   };
 
   const proceedToCheckout = () => {
-    navigate('/checkout');
-  };
-
+  navigate('/checkout', { state: { cartItems: cart } });
+};
   useEffect(() => {
     const fetchStock = async () => {
       try {

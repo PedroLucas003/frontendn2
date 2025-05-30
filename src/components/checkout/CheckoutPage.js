@@ -1,11 +1,13 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './CheckoutPage.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-const CheckoutPage = ({ cartItems }) => {
+const CheckoutPage = () => {
+  const location = useLocation();
+  const [cartItems, setCartItems] = useState([]);
   const [deliveryData, setDeliveryData] = useState({
     cep: '',
     address: '',
@@ -19,6 +21,28 @@ const CheckoutPage = ({ cartItems }) => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  // Carrega os itens do carrinho ao montar o componente
+  useEffect(() => {
+    // Primeiro tenta pegar do estado da navegação
+    if (location.state?.cartItems) {
+      setCartItems(location.state.cartItems);
+    } 
+    // Se não tiver, tenta pegar do localStorage
+    else {
+      const savedCart = localStorage.getItem('cart');
+      if (savedCart) {
+        setCartItems(JSON.parse(savedCart));
+      }
+    }
+  }, [location.state]);
+
+  // Redireciona se o carrinho estiver vazio
+  useEffect(() => {
+    if (cartItems.length === 0) {
+      navigate('/cervejas', { replace: true });
+    }
+  }, [cartItems, navigate]);
+
   const handleCheckout = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -27,6 +51,12 @@ const CheckoutPage = ({ cartItems }) => {
       const token = localStorage.getItem('token');
       if (!token) {
         navigate('/login');
+        return;
+      }
+
+      // Verifica se ainda há itens no carrinho
+      if (cartItems.length === 0) {
+        setError('Seu carrinho está vazio');
         return;
       }
 
@@ -44,10 +74,13 @@ const CheckoutPage = ({ cartItems }) => {
         }
       );
 
+      // Limpa o carrinho antes de redirecionar para o pagamento
+      localStorage.removeItem('cart');
       window.location.href = response.data.sandbox_init_point || response.data.init_point;
 
     } catch (error) {
       setError(error.response?.data?.error || error.message || 'Erro ao finalizar compra');
+      console.error('Erro no checkout:', error);
     } finally {
       setIsLoading(false);
     }
@@ -70,8 +103,16 @@ const CheckoutPage = ({ cartItems }) => {
   const renderCartItems = () => (
     <div className="cart-items">
       {cartItems.map(item => (
-        <div key={item.id} className="cart-item">
-          <img src={item.imagem} alt={item.nome} className="cart-item-image" />
+        <div key={`${item.id}-${item.quantity}`} className="cart-item">
+          <img 
+            src={item.imagem} 
+            alt={item.nome} 
+            className="cart-item-image" 
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = 'https://via.placeholder.com/100x150.png?text=Cerveja+Virada';
+            }}
+          />
           <div className="cart-item-details">
             <h4>{item.nome}</h4>
             <p className="cart-item-type">{item.tipo}</p>
@@ -98,14 +139,24 @@ const CheckoutPage = ({ cartItems }) => {
       <div className="checkout-grid">
         <div className="order-summary">
           <h2>Seu Carrinho</h2>
-          {cartItems.length > 0 ? renderCartItems() : <p>Seu carrinho está vazio</p>}
+          {cartItems.length > 0 ? renderCartItems() : (
+            <div className="empty-cart-message">
+              <p>Seu carrinho está vazio</p>
+              <button 
+                className="back-to-shop"
+                onClick={() => navigate('/cervejas')}
+              >
+                Voltar para a loja
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="delivery-payment">
           <div className="delivery-form">
             <h2>Informações de Entrega</h2>
             
-            <form>
+            <form onSubmit={(e) => e.preventDefault()}>
               <div className="form-group">
                 <label htmlFor="cep">CEP</label>
                 <input
@@ -165,6 +216,7 @@ const CheckoutPage = ({ cartItems }) => {
                   type="text"
                   id="neighborhood"
                   name="neighborhood"
+                  placeholder="Nome do bairro"
                   value={deliveryData.neighborhood}
                   onChange={handleInputChange}
                   required
@@ -178,6 +230,7 @@ const CheckoutPage = ({ cartItems }) => {
                     type="text"
                     id="city"
                     name="city"
+                    placeholder="Nome da cidade"
                     value={deliveryData.city}
                     onChange={handleInputChange}
                     required
@@ -189,6 +242,7 @@ const CheckoutPage = ({ cartItems }) => {
                     type="text"
                     id="state"
                     name="state"
+                    placeholder="UF"
                     value={deliveryData.state}
                     onChange={handleInputChange}
                     maxLength="2"
@@ -202,10 +256,15 @@ const CheckoutPage = ({ cartItems }) => {
           <div className="order-total-section">
             <button 
               onClick={handleCheckout}
-              disabled={isLoading || !deliveryData.cep || !deliveryData.address || !deliveryData.number}
+              disabled={isLoading || !deliveryData.cep || !deliveryData.address || !deliveryData.number || cartItems.length === 0}
               className="checkout-btn"
             >
-              {isLoading ? 'Processando...' : 'Finalizar Compra'}
+              {isLoading ? (
+                <>
+                  <span className="spinner"></span>
+                  Processando...
+                </>
+              ) : 'Finalizar Compra'}
             </button>
           </div>
         </div>

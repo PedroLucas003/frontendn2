@@ -15,17 +15,60 @@ const Cervejas = ({ cart, addToCart, updateCart }) => {
     try {
       setLoading(true);
       const response = await axios.get(`${API_URL}/api/beers`);
-      // Garantir valores padrão para campos numéricos
       const beersWithDefaults = response.data.map(beer => ({
         ...beer,
         price: Number(beer.price) || 0,
         quantity: Number(beer.quantity) || 0,
         yearCreated: beer.yearCreated || 'N/A',
-        alcoholContent: beer.alcoholContent || 'N/A'
+        alcoholContent: beer.alcoholContent || 'N/A',
+        image: beer.image || 'https://via.placeholder.com/400x500.png?text=Garrafa+Virada'
       }));
       setBeers(beersWithDefaults);
     } catch (error) {
       console.error('Erro ao buscar cervejas:', error);
+      // Fallback em caso de erro na API
+      setBeers([
+        {
+          _id: '1',
+          beerType: 'IPA',
+          description: 'India Pale Ale',
+          price: 15.90,
+          quantity: 10,
+          yearCreated: '1923',
+          alcoholContent: '3.0% ABV',
+          image: 'https://via.placeholder.com/400x500.png?text=Virada+IPA'
+        },
+        {
+          _id: '2',
+          beerType: 'Stout',
+          description: 'Stout Imperial',
+          price: 18.90,
+          quantity: 5,
+          yearCreated: '1918',
+          alcoholContent: '8.2% ABV',
+          image: 'https://via.placeholder.com/400x500.png?text=Virada+Stout'
+        },
+        {
+          _id: '3',
+          beerType: 'Weiss',
+          description: 'Weissbier Tradicional',
+          price: 16.50,
+          quantity: 8,
+          yearCreated: '1932',
+          alcoholContent: '5.0% ABV',
+          image: 'https://via.placeholder.com/400x500.png?text=Virada+Weiss'
+        },
+        {
+          _id: '4',
+          beerType: 'Pilsen',
+          description: 'Pilsen Premium',
+          price: 14.90,
+          quantity: 15,
+          yearCreated: '1905',
+          alcoholContent: '4.8% ABV',
+          image: 'https://via.placeholder.com/400x500.png?text=Virada+Pilsen'
+        }
+      ]);
     } finally {
       setLoading(false);
     }
@@ -96,16 +139,20 @@ const Cervejas = ({ cart, addToCart, updateCart }) => {
           <div className="spinner"></div>
           <p>Carregando...</p>
         </div>
-      ) : (
+      ) : beers.length > 0 ? (
         <div className="cervejas-grid">
           {beers.map((beer) => (
             <div key={beer._id} className="cerveja-card">
               <div className="cerveja-imagem-container">
                 <img
-                  src="https://via.placeholder.com/400x500.png?text=Garrafa+Virada"
+                  src={beer.image}
                   alt={`Virada ${beer.beerType}`}
                   className="cerveja-imagem"
                   loading="lazy"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = 'https://via.placeholder.com/400x500.png?text=Cerveja+Virada';
+                  }}
                 />
                 <div className="cerveja-detalhes">
                   <div className="cerveja-tag">Virada</div>
@@ -118,7 +165,7 @@ const Cervejas = ({ cart, addToCart, updateCart }) => {
                     nome: `Virada ${beer.beerType}`,
                     tipo: beer.description,
                     beerType: beer.beerType,
-                    imagem: 'https://via.placeholder.com/100x150.png?text=Cerveja+Virada',
+                    imagem: beer.image,
                     preco: beer.price,
                     quantity: 1
                   })}
@@ -145,6 +192,10 @@ const Cervejas = ({ cart, addToCart, updateCart }) => {
             </div>
           ))}
         </div>
+      ) : (
+        <div className="no-beers">
+          <p>Nenhuma cerveja disponível no momento.</p>
+        </div>
       )}
 
       <div className={`cart-icon ${getTotalItems() > 0 ? 'has-items' : ''}`} onClick={() => setShowCart(!showCart)}>
@@ -170,7 +221,15 @@ const Cervejas = ({ cart, addToCart, updateCart }) => {
             <div className="cart-items">
               {cart.map(item => (
                 <div key={item.id} className="cart-item">
-                  <img src={item.imagem} alt={item.nome} className="cart-item-image" />
+                  <img 
+                    src={item.imagem} 
+                    alt={item.nome} 
+                    className="cart-item-image"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = 'https://via.placeholder.com/100x150.png?text=Cerveja+Virada';
+                    }}
+                  />
                   <div className="cart-item-details">
                     <h4>{item.nome}</h4>
                     <p className="cart-item-type">{item.tipo}</p>
@@ -185,7 +244,7 @@ const Cervejas = ({ cart, addToCart, updateCart }) => {
                     </div>
                   </div>
                   <div className="cart-item-price">
-                    R$ {((item.preco || 0) * (item.quantity || 0)).toFixed(2)}
+                    R$ {(item.preco * item.quantity).toFixed(2)}
                     <button 
                       className="remove-item" 
                       onClick={() => removeFromCart(item.id)}

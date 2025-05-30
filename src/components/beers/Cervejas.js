@@ -6,58 +6,22 @@ import './Cervejas.css';
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const Cervejas = ({ cart, addToCart, updateCart }) => {
-  const [stock, setStock] = useState({
-    'IPA': 0,
-    'Stout': 0,
-    'Weiss': 0,
-    'Pilsen': 0
-  });
+  const [beers, setBeers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showCart, setShowCart] = useState(false);
   const navigate = useNavigate();
 
-  const cervejas = [
-    {
-      id: 1,
-      nome: "Virada IPA",
-      tipo: "India Pale Ale",
-      beerType: "IPA",
-      descricao: "Amarga e aromática com notas cítricas e de pinho. Uma homenagem aos mestres cervejeiros que iniciaram nossa tradição em 1923.",
-      imagem: "https://images.unsplash.com/photo-1566633806327-68e152aaf26d?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80",
-      teor: "3.0% ABV",
-      ano: "1923"
-    },
-    {
-      id: 2,
-      nome: "Virada Stout",
-      tipo: "Stout Imperial",
-      beerType: "Stout",
-      descricao: "Negra e cremosa com aromas de café torrado e chocolate. Receita original desde 1918, mantida em nossos arquivos secretos.",
-      imagem: "https://images.unsplash.com/photo-1566633806327-68e152aaf26d?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80",
-      teor: "8.2% ABV",
-      ano: "1918"
-    },
-    {
-      id: 3,
-      nome: "Virada Weiss",
-      tipo: "Weissbier Tradicional",
-      beerType: "Weiss",
-      descricao: "Refrescante com notas de banana e cravo. Introduzida em 1932 por um mestre cervejeiro alemão que se juntou à nossa equipe.",
-      imagem: "https://images.unsplash.com/photo-1600788886242-5c96aabe3757?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80",
-      teor: "5.0% ABV",
-      ano: "1932"
-    },
-    {
-      id: 4,
-      nome: "Virada Pilsen",
-      tipo: "Pilsen Premium",
-      beerType: "Pilsen",
-      descricao: "Clássica e refrescante com amargor equilibrado. Nossa primeira receita, criada pelos fundadores em 1905.",
-      imagem: "https://images.unsplash.com/photo-1600788886242-5c96aabe3757?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80",
-      teor: "4.8% ABV",
-      ano: "1905"
+  const fetchBeers = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API_URL}/api/beers`);
+      setBeers(response.data);
+    } catch (error) {
+      console.error('Erro ao buscar cervejas:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   const removeFromCart = (id) => {
     updateCart(cart.filter(item => item.id !== id));
@@ -81,8 +45,7 @@ const Cervejas = ({ cart, addToCart, updateCart }) => {
 
   const getTotalPrice = () => {
     return cart.reduce((total, item) => {
-      const price = 15.90;
-      return total + (price * item.quantity);
+      return total + (item.preco * item.quantity);
     }, 0).toFixed(2);
   };
 
@@ -91,33 +54,7 @@ const Cervejas = ({ cart, addToCart, updateCart }) => {
   };
 
   useEffect(() => {
-    const fetchStock = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(`${API_URL}/api/beers`);
-        
-        const newStock = {
-          'IPA': 0,
-          'Stout': 0,
-          'Weiss': 0,
-          'Pilsen': 0
-        };
-        
-        response.data.forEach(beer => {
-          if (newStock.hasOwnProperty(beer.beerType)) {
-            newStock[beer.beerType] = beer.quantity;
-          }
-        });
-        
-        setStock(newStock);
-      } catch (error) {
-        console.error('Erro ao buscar estoque:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStock();
+    fetchBeers();
 
     const setupAnimation = () => {
       const cards = document.querySelectorAll('.cerveja-card');
@@ -144,57 +81,63 @@ const Cervejas = ({ cart, addToCart, updateCart }) => {
 
   return (
     <section id="cervejas-section" className="cervejas-section">
-      <h2 className="section-title">Nossas <span className="destaque">Cervejas</span> Históricas</h2>
+      <h2 className="section-title">Nossas <span className="destaque">Cervejas</span></h2>
 
-      {loading && (
+      {loading ? (
         <div className="loading-indicator">
           <div className="spinner"></div>
-          <p>Atualizando estoque...</p>
+          <p>Carregando...</p>
+        </div>
+      ) : (
+        <div className="cervejas-grid">
+          {beers.map((beer) => (
+            <div key={beer._id} className="cerveja-card">
+              <div className="cerveja-imagem-container">
+                <img
+                  src="https://via.placeholder.com/400x500.png?text=Garrafa+Virada"
+                  alt={`Virada ${beer.beerType}`}
+                  className="cerveja-imagem"
+                  loading="lazy"
+                />
+                <div className="cerveja-detalhes">
+                  <div className="cerveja-tag">Virada</div>
+                  <div className="cerveja-ano">{beer.yearCreated}</div>
+                </div>
+                <button 
+                  className="add-to-cart-btn"
+                  onClick={() => addToCart({
+                    id: beer._id,
+                    nome: `Virada ${beer.beerType}`,
+                    tipo: beer.description,
+                    beerType: beer.beerType,
+                    imagem: 'https://via.placeholder.com/100x150.png?text=Cerveja+Virada',
+                    preco: beer.price,
+                    quantity: 1
+                  })}
+                  disabled={beer.quantity <= 0}
+                >
+                  <i className="fas fa-shopping-cart"></i>
+                  {beer.quantity > 0 ? 'Adicionar' : 'Esgotado'}
+                </button>
+              </div>
+              <div className="cerveja-info">
+                <h3>Virada {beer.beerType}</h3>
+                <p className="cerveja-tipo">{beer.description}</p>
+                <div className="cerveja-stock">
+                  <span className="stock-label">Estoque:</span>
+                  <span className={`stock-value ${beer.quantity > 0 ? 'in-stock' : 'out-of-stock'}`}>
+                    {beer.quantity} unidades
+                  </span>
+                </div>
+                <div className="cerveja-price">
+                  R$ {beer.price.toFixed(2)}
+                </div>
+                <span className="cerveja-teor">{beer.alcoholContent}</span>
+              </div>
+            </div>
+          ))}
         </div>
       )}
-
-      <div className="cervejas-grid">
-        {cervejas.map((cerveja) => (
-          <div key={cerveja.id} className="cerveja-card">
-            <div className="cerveja-imagem-container">
-              <img
-                src={cerveja.imagem}
-                alt={cerveja.nome}
-                className="cerveja-imagem"
-                loading="lazy"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = "https://via.placeholder.com/400x500.png?text=Garrafa+Virada";
-                }}
-              />
-              <div className="cerveja-detalhes">
-                <div className="cerveja-tag">Virada</div>
-                <div className="cerveja-ano">{cerveja.ano}</div>
-              </div>
-              <button 
-                className="add-to-cart-btn"
-                onClick={() => addToCart(cerveja)}
-                disabled={stock[cerveja.beerType] <= 0}
-              >
-                <i className="fas fa-shopping-cart"></i>
-                {stock[cerveja.beerType] > 0 ? 'Adicionar' : 'Esgotado'}
-              </button>
-            </div>
-            <div className="cerveja-info">
-              <h3>{cerveja.nome}</h3>
-              <p className="cerveja-tipo">{cerveja.tipo}</p>
-              <p className="cerveja-desc">{cerveja.descricao}</p>
-              <div className="cerveja-stock">
-                <span className="stock-label">Estoque:</span>
-                <span className={`stock-value ${stock[cerveja.beerType] > 0 ? 'in-stock' : 'out-of-stock'}`}>
-                  {stock[cerveja.beerType]} unidades
-                </span>
-              </div>
-              <span className="cerveja-teor">{cerveja.teor}</span>
-            </div>
-          </div>
-        ))}
-      </div>
 
       <div className={`cart-icon ${getTotalItems() > 0 ? 'has-items' : ''}`} onClick={() => setShowCart(!showCart)}>
         <i className="fas fa-shopping-cart"></i>
@@ -234,7 +177,7 @@ const Cervejas = ({ cart, addToCart, updateCart }) => {
                     </div>
                   </div>
                   <div className="cart-item-price">
-                    R$ {(15.90 * item.quantity).toFixed(2)}
+                    R$ {(item.preco * item.quantity).toFixed(2)}
                     <button 
                       className="remove-item" 
                       onClick={() => removeFromCart(item.id)}

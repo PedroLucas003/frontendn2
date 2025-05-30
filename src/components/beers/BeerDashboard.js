@@ -7,14 +7,16 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const BeerDashboard = () => {
   const [beers, setBeers] = useState([]);
   const [formData, setFormData] = useState({
-    beerType: 'Pilsen',
-    quantity: 0
+    beerType: '',
+    description: '',
+    alcoholContent: '',
+    yearCreated: '',
+    quantity: 0,
+    price: 15.90
   });
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-
-  const beerTypes = ['Pilsen', 'IPA', 'Stout', 'Weiss'];
 
   const fetchBeers = async () => {
     try {
@@ -26,9 +28,7 @@ const BeerDashboard = () => {
       }
 
       const response = await axios.get(`${API_URL}/api/beers`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` }
       });
       setBeers(response.data);
       setError('');
@@ -52,7 +52,7 @@ const BeerDashboard = () => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'quantity' ? Number(value) : value
+      [name]: name === 'quantity' || name === 'price' ? Number(value) : value
     }));
   };
 
@@ -61,9 +61,7 @@ const BeerDashboard = () => {
     try {
       const token = localStorage.getItem('token');
       const config = {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` }
       };
 
       if (editingId) {
@@ -72,14 +70,21 @@ const BeerDashboard = () => {
         await axios.post(`${API_URL}/api/beers`, formData, config);
       }
       
-      setFormData({ beerType: 'Pilsen', quantity: 0 });
+      setFormData({
+        beerType: '',
+        description: '',
+        alcoholContent: '',
+        yearCreated: '',
+        quantity: 0,
+        price: 15.90
+      });
       setEditingId(null);
       await fetchBeers();
     } catch (err) {
       if (err.response?.status === 401) {
         window.location.href = '/login';
       } else {
-        setError('Erro ao salvar cerveja');
+        setError(err.response?.data?.error || 'Erro ao salvar cerveja');
         console.error('Erro ao salvar cerveja:', err);
       }
     }
@@ -88,7 +93,11 @@ const BeerDashboard = () => {
   const handleEdit = (beer) => {
     setFormData({
       beerType: beer.beerType,
-      quantity: beer.quantity
+      description: beer.description,
+      alcoholContent: beer.alcoholContent,
+      yearCreated: beer.yearCreated,
+      quantity: beer.quantity,
+      price: beer.price
     });
     setEditingId(beer._id);
   };
@@ -98,9 +107,7 @@ const BeerDashboard = () => {
       try {
         const token = localStorage.getItem('token');
         await axios.delete(`${API_URL}/api/beers/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+          headers: { Authorization: `Bearer ${token}` }
         });
         await fetchBeers();
       } catch (err) {
@@ -126,28 +133,76 @@ const BeerDashboard = () => {
           <form onSubmit={handleSubmit} className="beer-form">
             <div className="form-group">
               <label>Tipo:</label>
-              <select
+              <input
+                type="text"
                 name="beerType"
                 value={formData.beerType}
                 onChange={handleChange}
                 required
-              >
-                {beerTypes.map(type => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
+                placeholder="Ex: IPA, Pilsen"
+              />
             </div>
 
             <div className="form-group">
-              <label>Quantidade:</label>
-              <input
-                type="number"
-                name="quantity"
-                value={formData.quantity}
+              <label>Descrição:</label>
+              <textarea
+                name="description"
+                value={formData.description}
                 onChange={handleChange}
-                min="0"
                 required
+                rows="3"
               />
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Teor Alcoólico:</label>
+                <input
+                  type="text"
+                  name="alcoholContent"
+                  value={formData.alcoholContent}
+                  onChange={handleChange}
+                  required
+                  placeholder="Ex: 5.0% ABV"
+                />
+              </div>
+              <div className="form-group">
+                <label>Ano de Criação:</label>
+                <input
+                  type="text"
+                  name="yearCreated"
+                  value={formData.yearCreated}
+                  onChange={handleChange}
+                  required
+                  placeholder="Ex: 1923"
+                />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Quantidade:</label>
+                <input
+                  type="number"
+                  name="quantity"
+                  value={formData.quantity}
+                  onChange={handleChange}
+                  min="0"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Preço (R$):</label>
+                <input
+                  type="number"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleChange}
+                  min="0"
+                  step="0.01"
+                  required
+                />
+              </div>
             </div>
 
             <button type="submit" className="submit-btn">
@@ -157,7 +212,14 @@ const BeerDashboard = () => {
               <button 
                 type="button" 
                 onClick={() => {
-                  setFormData({ beerType: 'Pilsen', quantity: 0 });
+                  setFormData({
+                    beerType: '',
+                    description: '',
+                    alcoholContent: '',
+                    yearCreated: '',
+                    quantity: 0,
+                    price: 15.90
+                  });
                   setEditingId(null);
                 }}
                 className="cancel-btn"
@@ -176,7 +238,11 @@ const BeerDashboard = () => {
                 <thead>
                   <tr>
                     <th>Tipo</th>
+                    <th>Descrição</th>
+                    <th>Teor</th>
+                    <th>Ano</th>
                     <th>Quantidade</th>
+                    <th>Preço</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
@@ -184,7 +250,11 @@ const BeerDashboard = () => {
                   {beers.map(beer => (
                     <tr key={beer._id}>
                       <td>{beer.beerType}</td>
+                      <td>{beer.description}</td>
+                      <td>{beer.alcoholContent}</td>
+                      <td>{beer.yearCreated}</td>
                       <td>{beer.quantity}</td>
+                      <td>R$ {beer.price.toFixed(2)}</td>
                       <td>
                         <button onClick={() => handleEdit(beer)}>Editar</button>
                         <button onClick={() => handleDelete(beer._id)}>Excluir</button>

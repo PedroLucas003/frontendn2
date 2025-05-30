@@ -30,20 +30,11 @@ const CheckoutPage = ({ cartItems }) => {
         return;
       }
 
-      // Mock de opções de frete (substitua por sua lógica real se necessário)
-      const shippingOption = {
-        Codigo: '04510',
-        Valor: '15,00',
-        PrazoEntrega: '3',
-        nome: 'Sedex'
-      };
-
       const response = await axios.post(
         `${API_URL}/api/payments/create-preference`,
         {
           items: cartItems,
-          deliveryData,
-          shippingOption
+          deliveryData
         },
         {
           headers: {
@@ -53,7 +44,6 @@ const CheckoutPage = ({ cartItems }) => {
         }
       );
 
-      // Redireciona para o checkout do Mercado Pago
       window.location.href = response.data.sandbox_init_point || response.data.init_point;
 
     } catch (error) {
@@ -66,7 +56,6 @@ const CheckoutPage = ({ cartItems }) => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     
-    // Formatação especial para CEP
     if (name === 'cep') {
       const numericValue = value.replace(/\D/g, '');
       const formattedValue = numericValue.length > 5 
@@ -78,6 +67,28 @@ const CheckoutPage = ({ cartItems }) => {
     }
   };
 
+  const renderCartItems = () => (
+    <div className="cart-items">
+      {cartItems.map(item => (
+        <div key={item.id} className="cart-item">
+          <img src={item.imagem} alt={item.nome} className="cart-item-image" />
+          <div className="cart-item-details">
+            <h4>{item.nome}</h4>
+            <p className="cart-item-type">{item.tipo}</p>
+            <p>Quantidade: {item.quantity}</p>
+            <p>R$ {(15.90 * item.quantity).toFixed(2)}</p>
+          </div>
+        </div>
+      ))}
+      <div className="cart-shipping">
+        <p>Frete: R$ 15,00</p>
+      </div>
+      <div className="cart-total">
+        <p>Total: R$ {(cartItems.reduce((sum, item) => sum + (15.90 * item.quantity), 0) + 15).toFixed(2)}</p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="checkout-container">
       <h1>Finalize sua Compra</h1>
@@ -87,7 +98,7 @@ const CheckoutPage = ({ cartItems }) => {
       <div className="checkout-grid">
         <div className="order-summary">
           <h2>Seu Carrinho</h2>
-          {/* Renderização dos itens do carrinho... */}
+          {cartItems.length > 0 ? renderCartItems() : <p>Seu carrinho está vazio</p>}
         </div>
 
         <div className="delivery-payment">
@@ -105,6 +116,7 @@ const CheckoutPage = ({ cartItems }) => {
                   value={deliveryData.cep}
                   onChange={handleInputChange}
                   maxLength="9"
+                  required
                 />
               </div>
               
@@ -117,17 +129,80 @@ const CheckoutPage = ({ cartItems }) => {
                   placeholder="Rua, Avenida, etc."
                   value={deliveryData.address}
                   onChange={handleInputChange}
+                  required
                 />
               </div>
               
-              {/* Outros campos do formulário... */}
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="number">Número</label>
+                  <input
+                    type="text"
+                    id="number"
+                    name="number"
+                    placeholder="Nº"
+                    value={deliveryData.number}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="complement">Complemento</label>
+                  <input
+                    type="text"
+                    id="complement"
+                    name="complement"
+                    placeholder="Apto, Bloco, etc."
+                    value={deliveryData.complement}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="neighborhood">Bairro</label>
+                <input
+                  type="text"
+                  id="neighborhood"
+                  name="neighborhood"
+                  value={deliveryData.neighborhood}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="city">Cidade</label>
+                  <input
+                    type="text"
+                    id="city"
+                    name="city"
+                    value={deliveryData.city}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="state">Estado</label>
+                  <input
+                    type="text"
+                    id="state"
+                    name="state"
+                    value={deliveryData.state}
+                    onChange={handleInputChange}
+                    maxLength="2"
+                    required
+                  />
+                </div>
+              </div>
             </form>
           </div>
           
           <div className="order-total-section">
             <button 
               onClick={handleCheckout}
-              disabled={isLoading || !deliveryData.cep}
+              disabled={isLoading || !deliveryData.cep || !deliveryData.address || !deliveryData.number}
               className="checkout-btn"
             >
               {isLoading ? 'Processando...' : 'Finalizar Compra'}

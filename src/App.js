@@ -70,19 +70,19 @@ function App() {
     setCart([]);
   };
 
-const addToCart = (item) => {
-  setCart(prevCart => {
-    const existingItem = prevCart.find(cartItem => cartItem._id === item._id); // Alterado de id para _id
-    if (existingItem) {
-      return prevCart.map(cartItem =>
-        cartItem._id === item._id // Alterado de id para _id
-          ? { ...cartItem, quantity: cartItem.quantity + 1 } 
-          : cartItem
-      );
-    }
-    return [...prevCart, { ...item, quantity: 1 }];
-  });
-};
+  const addToCart = (item) => {
+    setCart(prevCart => {
+      const existingItem = prevCart.find(cartItem => cartItem._id === item._id);
+      if (existingItem) {
+        return prevCart.map(cartItem =>
+          cartItem._id === item._id
+            ? { ...cartItem, quantity: cartItem.quantity + 1 }
+            : cartItem
+        );
+      }
+      return [...prevCart, { ...item, quantity: 1 }];
+    });
+  };
 
   const updateCart = (updatedCart) => {
     setCart(updatedCart);
@@ -109,7 +109,7 @@ const addToCart = (item) => {
           isAuthenticated={isAuthenticated} 
           onLogout={handleLogout} 
           user={user} 
-          cartItems={cart.length}
+          cartItems={cart.reduce((total, item) => total + item.quantity, 0)}
         />
         
         {error && (

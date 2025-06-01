@@ -4,46 +4,52 @@ import './HeroBanner.css';
 const HeroBanner = () => {
   useEffect(() => {
     const heroContent = document.querySelector('.hero-content');
-    heroContent.style.opacity = 0;
-    heroContent.style.transform = 'translateY(20px)';
-    
-    setTimeout(() => {
-      heroContent.style.transition = 'opacity 0.8s ease-out, transform 0.8s ease-out';
-      heroContent.style.opacity = 1;
-      heroContent.style.transform = 'translateY(0)';
-    }, 100);
-  }, []);
-
-const scrollToCervejas = () => {
-  const button = document.querySelector('.cta-button');
-  
-  button.classList.add('button-clicked');
-  setTimeout(() => {
-    button.classList.remove('button-clicked');
-  }, 300);
-
-  // Tentativa recursiva para encontrar o elemento
-  const tryScroll = (attempts = 0) => {
-    const element = document.getElementById('cervejas-section');
-    if (element) {
-      window.scrollTo({
-        top: element.offsetTop - 30,
-        behavior: 'smooth'
-      });
+    if (heroContent) {
+      heroContent.style.opacity = 0;
+      heroContent.style.transform = 'translateY(20px)';
       
       setTimeout(() => {
-        element.classList.add('scroll-activated');
-        setTimeout(() => {
-          element.classList.remove('scroll-activated');
-        }, 1000);
-      }, 800);
-    } else if (attempts < 5) {
-      setTimeout(() => tryScroll(attempts + 1), 200);
+        heroContent.style.transition = 'opacity 0.8s ease-out, transform 0.8s ease-out';
+        heroContent.style.opacity = 1;
+        heroContent.style.transform = 'translateY(0)';
+      }, 100);
     }
-  };
+  }, []);
 
-  tryScroll();
-};
+  const scrollToCervejas = () => {
+    const button = document.querySelector('.cta-button');
+    if (button) button.classList.add('button-clicked');
+    
+    setTimeout(() => {
+      if (button) button.classList.remove('button-clicked');
+      
+      const scrollToSection = () => {
+        const element = document.getElementById('cervejas-section');
+        if (element) {
+          window.scrollTo({
+            top: element.offsetTop - 30,
+            behavior: 'smooth'
+          });
+          
+          element.classList.add('scroll-activated');
+          setTimeout(() => {
+            element.classList.remove('scroll-activated');
+          }, 1000);
+        } else {
+          // Fallback caso o elemento não seja encontrado
+          window.location.hash = 'cervejas-section';
+        }
+      };
+
+      // Verifica se o elemento já existe
+      if (document.getElementById('cervejas-section')) {
+        scrollToSection();
+      } else {
+        // Se não existir, espera um pouco e tenta novamente
+        setTimeout(scrollToSection, 300);
+      }
+    }, 300);
+  };
 
   return (
     <section className="hero-banner">

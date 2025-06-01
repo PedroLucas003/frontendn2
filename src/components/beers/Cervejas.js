@@ -160,8 +160,9 @@ const Cervejas = () => {
   }, []);
 
   return (
-    <section id="cervejas-section" className="cervejas-section">
-      <h2 className="section-title">Nossas <span className="destaque">Cervejas</span> Históricas</h2>
+  <section className="cervejas-section">
+    {/* Removi o id daqui pois agora está na section wrapper no App.js */}
+    <h2 className="section-title">Nossas <span className="destaque">Cervejas</span> Históricas</h2>
 
       {loading && (
         <div className="loading-indicator">

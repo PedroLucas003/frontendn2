@@ -37,7 +37,10 @@ const Navbar = ({ isAuthenticated, onLogout, user, cartItems }) => {
           <button className="menu-toggle" onClick={toggleMobileMenu}>
             <i className={`fas ${mobileMenuOpen ? 'fa-times' : 'fa-bars'}`}></i>
           </button>
-          <Link to="/" className="home-link">Home</Link>
+          <Link to="/" className="home-link">
+            <span className="button-icon">⌂</span>
+            <span className="button-text">Home</span>
+          </Link>
         </div>
 
         <div className="navbar-right">
@@ -53,21 +56,26 @@ const Navbar = ({ isAuthenticated, onLogout, user, cartItems }) => {
                   {user?.isAdmin && (
                     <>
                       <Link to="/dashboard" onClick={() => setMenuOpen(false)}>
-                        Dashboard
+                        <i className="fas fa-tachometer-alt"></i> Dashboard
                       </Link>
                       <Link to="/users" onClick={() => setMenuOpen(false)}>
-                        Gerenciar Usuários
+                        <i className="fas fa-users"></i> Gerenciar Usuários
                       </Link>
                     </>
                   )}
+                  <Link to="/checkout" onClick={() => setMenuOpen(false)} className="cart-menu-item">
+                    <i className="fas fa-shopping-cart"></i> Carrinho
+                    {cartItems > 0 && <span className="cart-count">{cartItems}</span>}
+                  </Link>
                   <button onClick={handleLogoutClick} className="logout-btn">
-                    Sair
+                    <i className="fas fa-sign-out-alt"></i> Sair
                   </button>
                 </div>
               )}
             </div>
           ) : (
             <Link to="/login" className="login-link">
+              <span className="button-icon">→</span>
               <span className="button-text">Login</span>
             </Link>
           )}
@@ -84,29 +92,33 @@ const Navbar = ({ isAuthenticated, onLogout, user, cartItems }) => {
       {/* Menu lateral para mobile */}
       <div className={`mobile-menu ${mobileMenuOpen ? 'open' : ''}`}>
         <div className="mobile-menu-content">
-          <Link to="/" onClick={() => setMobileMenuOpen(false)}>Home</Link>
+          <Link to="/" onClick={() => setMobileMenuOpen(false)} className="mobile-menu-item">
+            <i className="fas fa-home"></i> Home
+          </Link>
           
-          {isAuthenticated && (
+          {isAuthenticated ? (
             <>
               {user?.isAdmin && (
                 <>
-                  <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-                    Dashboard
+                  <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="mobile-menu-item">
+                    <i className="fas fa-tachometer-alt"></i> Dashboard
                   </Link>
-                  <Link to="/users" onClick={() => setMobileMenuOpen(false)}>
-                    Gerenciar Usuários
+                  <Link to="/users" onClick={() => setMobileMenuOpen(false)} className="mobile-menu-item">
+                    <i className="fas fa-users"></i> Gerenciar Usuários
                   </Link>
                 </>
               )}
-              <button onClick={handleLogoutClick} className="logout-btn">
-                Sair
+              <Link to="/checkout" onClick={() => setMobileMenuOpen(false)} className="mobile-menu-item">
+                <i className="fas fa-shopping-cart"></i> Carrinho
+                {cartItems > 0 && <span className="cart-count">{cartItems}</span>}
+              </Link>
+              <button onClick={handleLogoutClick} className="mobile-menu-item logout-btn">
+                <i className="fas fa-sign-out-alt"></i> Sair
               </button>
             </>
-          )}
-          
-          {!isAuthenticated && (
-            <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
-              Login
+          ) : (
+            <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="mobile-menu-item">
+              <i className="fas fa-sign-in-alt"></i> Login
             </Link>
           )}
         </div>

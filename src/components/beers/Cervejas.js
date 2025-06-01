@@ -49,11 +49,11 @@ const Cervejas = () => {
     return cart.reduce((total, item) => total + item.quantity, 0);
   };
 
-  const getTotalPrice = () => {
-    return cart.reduce((total, item) => {
-      return total + (item.price * item.quantity);
-    }, 0).toFixed(2);
-  };
+const getTotalPrice = () => {
+  return cart.reduce((total, item) => {
+    return total + ((item.price || 0) * item.quantity);
+  }, 0).toFixed(2);
+};
 
   const proceedToCheckout = () => {
     navigate('/checkout');
@@ -179,7 +179,7 @@ const Cervejas = () => {
                 </span>
               </div>
               <span className="cerveja-teor">{cerveja.teor}</span>
-              <span className="cerveja-price">R$ {cerveja.price.toFixed(2)}</span>
+              <span className="cerveja-price">R$ {(cerveja.price || 0).toFixed(2)}</span>
             </div>
           </div>
         ))}

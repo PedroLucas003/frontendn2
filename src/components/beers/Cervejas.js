@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './Cervejas.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -16,6 +16,7 @@ const Cervejas = () => {
   const [cart, setCart] = useState([]);
   const [showCart, setShowCart] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const cervejas = [
     {
@@ -104,9 +105,24 @@ const Cervejas = () => {
   };
 
   const proceedToCheckout = () => {
-  navigate('/checkout', { state: { cartItems: cart } });
-};
+    navigate('/checkout');
+  };
+
   useEffect(() => {
+    // Scroll para a seção quando o componente é montado
+    if (location.hash === '#cervejas-section') {
+      const element = document.getElementById('cervejas-section');
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth' });
+          element.classList.add('scroll-activated');
+          setTimeout(() => {
+            element.classList.remove('scroll-activated');
+          }, 1000);
+        }, 300);
+      }
+    }
+
     const fetchStock = async () => {
       try {
         setLoading(true);
@@ -156,7 +172,7 @@ const Cervejas = () => {
 
     const animationTimer = setTimeout(setupAnimation, 100);
     return () => clearTimeout(animationTimer);
-  }, []);
+  }, [location.hash]);
 
   return (
     <section id="cervejas-section" className="cervejas-section">

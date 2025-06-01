@@ -14,33 +14,29 @@ const HeroBanner = () => {
     }, 100);
   }, []);
 
-const scrollToCervejas = () => {
-  const element = document.getElementById('cervejas-section');
-  const button = document.querySelector('.cta-button');
-  
-  if (!element) {
-    // Se não encontrar a seção, navega para a rota /cervejas
-    window.location.href = '/cervejas';
-    return;
-  }
-
-  button.classList.add('button-clicked');
-  setTimeout(() => {
-    button.classList.remove('button-clicked');
-  }, 300);
-  
-  window.scrollTo({
-    top: element.offsetTop - 30,
-    behavior: 'smooth'
-  });
-  
-  setTimeout(() => {
-    element.classList.add('scroll-activated');
-    setTimeout(() => {
-      element.classList.remove('scroll-activated');
-    }, 1000);
-  }, 800);
-};
+  const scrollToCervejas = () => {
+    const element = document.getElementById('cervejas-section');
+    const button = document.querySelector('.cta-button');
+    
+    if (element) {
+      button.classList.add('button-clicked');
+      setTimeout(() => {
+        button.classList.remove('button-clicked');
+      }, 300);
+      
+      window.scrollTo({
+        top: element.offsetTop - 30,
+        behavior: 'smooth'
+      });
+      
+      setTimeout(() => {
+        element.classList.add('scroll-activated');
+        setTimeout(() => {
+          element.classList.remove('scroll-activated');
+        }, 1000);
+      }, 800);
+    }
+  };
 
   return (
     <section className="hero-banner">

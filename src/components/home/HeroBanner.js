@@ -5,23 +5,27 @@ const HeroBanner = () => {
   useEffect(() => {
     const heroContent = document.querySelector('.hero-content');
     if (heroContent) {
-      heroContent.style.opacity = 0;
+      heroContent.style.opacity = '0';
       heroContent.style.transform = 'translateY(20px)';
       
       setTimeout(() => {
         heroContent.style.transition = 'opacity 0.8s ease-out, transform 0.8s ease-out';
-        heroContent.style.opacity = 1;
+        heroContent.style.opacity = '1';
         heroContent.style.transform = 'translateY(0)';
       }, 100);
     }
   }, []);
 
-  const scrollToCervejas = () => {
+  const scrollToCervejas = (e) => {
+    e.preventDefault();
+    const button = e.currentTarget;
     const element = document.getElementById('cervejas-section');
-    const button = document.querySelector('.cta-button');
-    
-    if (!element || !button) return;
-    
+
+    if (!element) {
+      console.error('Seção de cervejas não encontrada!');
+      return;
+    }
+
     // Animação do botão
     button.classList.add('button-clicked');
     setTimeout(() => {
@@ -30,18 +34,22 @@ const HeroBanner = () => {
 
     // Scroll para a seção
     setTimeout(() => {
+      const targetPosition = element.getBoundingClientRect().top + window.pageYOffset - 30;
       window.scrollTo({
-        top: element.offsetTop - 30,
+        top: targetPosition,
         behavior: 'smooth'
       });
-      
-      // Efeito na seção de destino
-      setTimeout(() => {
-        element.classList.add('scroll-activated');
-        setTimeout(() => {
-          element.classList.remove('scroll-activated');
-        }, 1000);
-      }, 800);
+
+      // Ativa o efeito na seção de destino após o scroll
+      const checkScroll = setInterval(() => {
+        if (Math.abs(window.pageYOffset - targetPosition) < 10) {
+          clearInterval(checkScroll);
+          element.classList.add('scroll-activated');
+          setTimeout(() => {
+            element.classList.remove('scroll-activated');
+          }, 1000);
+        }
+      }, 100);
     }, 100);
   };
 

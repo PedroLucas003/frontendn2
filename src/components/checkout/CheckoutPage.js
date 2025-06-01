@@ -67,27 +67,27 @@ const CheckoutPage = ({ cartItems }) => {
     }
   };
 
-  const renderCartItems = () => (
-    <div className="cart-items">
-      {cartItems.map(item => (
-        <div key={item.id} className="cart-item">
-          <img src={item.imagem} alt={item.nome} className="cart-item-image" />
-          <div className="cart-item-details">
-            <h4>{item.nome}</h4>
-            <p className="cart-item-type">{item.tipo}</p>
-            <p>Quantidade: {item.quantity}</p>
-            <p>R$ {(15.90 * item.quantity).toFixed(2)}</p>
-          </div>
+const renderCartItems = () => (
+  <div className="cart-items">
+    {cartItems.map(item => (
+      <div key={item._id} className="cart-item"> {/* Alterado de item.id para item._id */}
+        <img src={item.imagem} alt={item.nome} className="cart-item-image" />
+        <div className="cart-item-details">
+          <h4>{item.nome}</h4>
+          <p className="cart-item-type">{item.tipo}</p>
+          <p>Quantidade: {item.quantity}</p>
+          <p>R$ {(item.price * item.quantity).toFixed(2)}</p> {/* Usando item.price em vez de valor fixo */}
         </div>
-      ))}
-      <div className="cart-shipping">
-        <p>Frete: R$ 15,00</p>
       </div>
-      <div className="cart-total">
-        <p>Total: R$ {(cartItems.reduce((sum, item) => sum + (15.90 * item.quantity), 0) + 15).toFixed(2)}</p>
-      </div>
+    ))}
+    <div className="cart-shipping">
+      <p>Frete: R$ 15,00</p>
     </div>
-  );
+    <div className="cart-total">
+      <p>Total: R$ {(cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0) + 15).toFixed(2)}</p>
+    </div>
+  </div>
+);
 
   return (
     <div className="checkout-container">

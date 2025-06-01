@@ -5,55 +5,43 @@ import './Cervejas.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-const Cervejas = () => {
+const Cervejas = ({ cart, addToCart, updateCart }) => {
   const [cervejas, setCervejas] = useState([]);
   const [stock, setStock] = useState({});
   const [loading, setLoading] = useState(true);
-  const [cart, setCart] = useState([]);
   const [showCart, setShowCart] = useState(false);
   const navigate = useNavigate();
 
-  const addToCart = (cerveja) => {
-    setCart(prevCart => {
-      const existingItem = prevCart.find(item => item._id === cerveja._id);
-      if (existingItem) {
-        return prevCart.map(item =>
-          item._id === cerveja._id 
-            ? { ...item, quantity: item.quantity + 1 } 
-            : item
-        );
-      } else {
-        return [...prevCart, { ...cerveja, quantity: 1 }];
-      }
-    });
+  const handleAddToCart = (cerveja) => {
+    addToCart(cerveja); // Usa a função addToCart de App.js
     setShowCart(true);
   };
 
-  const removeFromCart = (id) => {
-    setCart(prevCart => prevCart.filter(item => item._id !== id));
+  const handleRemoveFromCart = (id) => {
+    const updatedCart = cart.filter(item => item._id !== id);
+    updateCart(updatedCart); // Usa a função updateCart de App.js
   };
 
-  const updateQuantity = (id, newQuantity) => {
+  const handleUpdateQuantity = (id, newQuantity) => {
     if (newQuantity < 1) {
-      removeFromCart(id);
+      handleRemoveFromCart(id);
       return;
     }
-    setCart(prevCart =>
-      prevCart.map(item =>
-        item._id === id ? { ...item, quantity: newQuantity } : item
-      )
+    const updatedCart = cart.map(item =>
+      item._id === id ? { ...item, quantity: newQuantity } : item
     );
+    updateCart(updatedCart); // Usa a função updateCart de App.js
   };
 
   const getTotalItems = () => {
     return cart.reduce((total, item) => total + item.quantity, 0);
   };
 
-const getTotalPrice = () => {
-  return cart.reduce((total, item) => {
-    return total + ((item.price || 0) * item.quantity);
-  }, 0).toFixed(2);
-};
+  const getTotalPrice = () => {
+    return cart.reduce((total, item) => {
+      return total + ((item.price || 0) * item.quantity);
+    }, 0).toFixed(2);
+  };
 
   const proceedToCheckout = () => {
     navigate('/checkout');
@@ -64,8 +52,6 @@ const getTotalPrice = () => {
       try {
         setLoading(true);
         const response = await axios.get(`${API_URL}/api/beers`);
-        
-        // Transforma os dados da API para o formato esperado pelo frontend
         const formattedBeers = response.data.map(beer => ({
           _id: beer._id,
           nome: `Virada ${beer.beerType}`,
@@ -75,17 +61,14 @@ const getTotalPrice = () => {
           imagem: getBeerImage(beer.beerType),
           teor: beer.alcoholContent,
           ano: beer.yearCreated,
-          price: beer.price
+          price: Number(beer.price) || 0 // Garante que o preço seja um número
         }));
-        
         setCervejas(formattedBeers);
-        
-        // Cria o objeto de estoque
+
         const newStock = {};
         response.data.forEach(beer => {
           newStock[beer.beerType] = beer.quantity;
         });
-        
         setStock(newStock);
       } catch (error) {
         console.error('Erro ao buscar cervejas:', error);
@@ -94,7 +77,6 @@ const getTotalPrice = () => {
       }
     };
 
-    // Função auxiliar para obter imagem baseada no tipo de cerveja
     const getBeerImage = (beerType) => {
       const images = {
         'IPA': 'https://images.unsplash.com/photo-1566633806327-68e152aaf26d?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80',
@@ -107,6 +89,7 @@ const getTotalPrice = () => {
 
     fetchBeers();
 
+    // Animação (mantida como estava)
     const setupAnimation = () => {
       const cards = document.querySelectorAll('.cerveja-card');
       if (cards.length > 0) {
@@ -116,19 +99,17 @@ const getTotalPrice = () => {
               entry.target.classList.add('visible');
             }
           });
-        }, { 
+        }, {
           threshold: 0.1,
           rootMargin: '0px 0px -50px 0px'
         });
-
         cards.forEach(card => observer.observe(card));
         return () => cards.forEach(card => observer.unobserve(card));
       }
     };
-
     const animationTimer = setTimeout(setupAnimation, 100);
     return () => clearTimeout(animationTimer);
-  }, []);
+  }, []); // Dependência vazia para rodar uma vez no mount
 
   return (
     <section id="cervejas-section" className="cervejas-section">
@@ -159,9 +140,9 @@ const getTotalPrice = () => {
                 <div className="cerveja-tag">Virada</div>
                 <div className="cerveja-ano">{cerveja.ano}</div>
               </div>
-              <button 
+              <button
                 className="add-to-cart-btn"
-                onClick={() => addToCart(cerveja)}
+                onClick={() => handleAddToCart(cerveja)}
                 disabled={stock[cerveja.beerType] <= 0}
               >
                 <i className="fas fa-shopping-cart"></i>
@@ -197,7 +178,7 @@ const getTotalPrice = () => {
             <i className="fas fa-times"></i>
           </button>
         </div>
-        
+
         {cart.length === 0 ? (
           <div className="empty-cart">
             <i className="fas fa-shopping-cart"></i>
@@ -213,20 +194,20 @@ const getTotalPrice = () => {
                     <h4>{item.nome}</h4>
                     <p className="cart-item-type">{item.tipo}</p>
                     <div className="cart-item-quantity">
-                      <button onClick={() => updateQuantity(item._id, item.quantity - 1)}>
+                      <button onClick={() => handleUpdateQuantity(item._id, item.quantity - 1)}>
                         <i className="fas fa-minus"></i>
                       </button>
                       <span>{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item._id, item.quantity + 1)}>
+                      <button onClick={() => handleUpdateQuantity(item._id, item.quantity + 1)}>
                         <i className="fas fa-plus"></i>
                       </button>
                     </div>
                   </div>
                   <div className="cart-item-price">
-                    R$ {(item.price * item.quantity).toFixed(2)}
-                    <button 
-                      className="remove-item" 
-                      onClick={() => removeFromCart(item._id)}
+                    R$ {((item.price || 0) * item.quantity).toFixed(2)}
+                    <button
+                      className="remove-item"
+                      onClick={() => handleRemoveFromCart(item._id)}
                     >
                       <i className="fas fa-trash"></i>
                     </button>
@@ -234,13 +215,13 @@ const getTotalPrice = () => {
                 </div>
               ))}
             </div>
-            
+
             <div className="cart-summary">
               <div className="cart-total">
                 <span>Total:</span>
                 <span>R$ {getTotalPrice()}</span>
               </div>
-              <button 
+              <button
                 className="checkout-btn"
                 onClick={proceedToCheckout}
               >
@@ -250,7 +231,6 @@ const getTotalPrice = () => {
           </>
         )}
       </div>
-      
       {showCart && <div className="cart-overlay" onClick={() => setShowCart(false)}></div>}
     </section>
   );

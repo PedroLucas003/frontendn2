@@ -70,19 +70,19 @@ function App() {
     setCart([]);
   };
 
-  const addToCart = (item) => {
-    setCart(prevCart => {
-      const existingItem = prevCart.find(cartItem => cartItem.id === item.id);
-      if (existingItem) {
-        return prevCart.map(cartItem =>
-          cartItem.id === item.id 
-            ? { ...cartItem, quantity: cartItem.quantity + 1 } 
-            : cartItem
-        );
-      }
-      return [...prevCart, { ...item, quantity: 1 }];
-    });
-  };
+const addToCart = (item) => {
+  setCart(prevCart => {
+    const existingItem = prevCart.find(cartItem => cartItem._id === item._id); // Alterado de id para _id
+    if (existingItem) {
+      return prevCart.map(cartItem =>
+        cartItem._id === item._id // Alterado de id para _id
+          ? { ...cartItem, quantity: cartItem.quantity + 1 } 
+          : cartItem
+      );
+    }
+    return [...prevCart, { ...item, quantity: 1 }];
+  });
+};
 
   const updateCart = (updatedCart) => {
     setCart(updatedCart);

@@ -1,11 +1,11 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './CheckoutPage.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-const CheckoutPage = ({ cartItems }) => {
+const CheckoutPage = ({ cartItems, updateCart, clearCart }) => {
   const [deliveryData, setDeliveryData] = useState({
     cep: '',
     address: '',
@@ -19,6 +19,11 @@ const CheckoutPage = ({ cartItems }) => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  // Debug: verifique os itens recebidos
+  useEffect(() => {
+    console.log('Itens recebidos no Checkout:', cartItems);
+  }, [cartItems]);
+
   const handleCheckout = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -27,6 +32,11 @@ const CheckoutPage = ({ cartItems }) => {
       const token = localStorage.getItem('token');
       if (!token) {
         navigate('/login');
+        return;
+      }
+
+      if (!cartItems || cartItems.length === 0) {
+        setError('Seu carrinho está vazio');
         return;
       }
 
@@ -47,6 +57,7 @@ const CheckoutPage = ({ cartItems }) => {
       window.location.href = response.data.sandbox_init_point || response.data.init_point;
 
     } catch (error) {
+      console.error('Erro no checkout:', error);
       setError(error.response?.data?.error || error.message || 'Erro ao finalizar compra');
     } finally {
       setIsLoading(false);
@@ -67,27 +78,52 @@ const CheckoutPage = ({ cartItems }) => {
     }
   };
 
-const renderCartItems = () => (
-  <div className="cart-items">
-    {cartItems.map(item => (
-      <div key={item._id} className="cart-item"> {/* Alterado de item.id para item._id */}
-        <img src={item.imagem} alt={item.nome} className="cart-item-image" />
-        <div className="cart-item-details">
-          <h4>{item.nome}</h4>
-          <p className="cart-item-type">{item.tipo}</p>
-          <p>Quantidade: {item.quantity}</p>
-          <p>R$ {(item.price * item.quantity).toFixed(2)}</p> {/* Usando item.price em vez de valor fixo */}
+  const renderCartItems = () => {
+    if (!cartItems || cartItems.length === 0) {
+      return (
+        <div className="empty-cart-checkout">
+          <i className="fas fa-shopping-cart"></i>
+          <p>Seu carrinho está vazio</p>
+          <button 
+            className="continue-shopping-btn"
+            onClick={() => navigate('/')}
+          >
+            Continuar Comprando
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="cart-items">
+        {cartItems.map(item => (
+          <div key={item._id} className="cart-item">
+            <img 
+              src={item.imagem || 'https://via.placeholder.com/100'} 
+              alt={item.nome} 
+              className="cart-item-image"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = 'https://via.placeholder.com/100';
+              }}
+            />
+            <div className="cart-item-details">
+              <h4>{item.nome || 'Produto sem nome'}</h4>
+              <p className="cart-item-type">{item.tipo || 'Sem tipo'}</p>
+              <p>Quantidade: {item.quantity || 0}</p>
+              <p>R$ {((item.price || 0) * (item.quantity || 0)).toFixed(2)}</p>
+            </div>
+          </div>
+        ))}
+        <div className="cart-shipping">
+          <p>Frete: R$ 15,00</p>
+        </div>
+        <div className="cart-total">
+          <p>Total: R$ {(cartItems.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 0)), 0) + 15).toFixed(2)}</p>
         </div>
       </div>
-    ))}
-    <div className="cart-shipping">
-      <p>Frete: R$ 15,00</p>
-    </div>
-    <div className="cart-total">
-      <p>Total: R$ {(cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0) + 15).toFixed(2)}</p>
-    </div>
-  </div>
-);
+    );
+  };
 
   return (
     <div className="checkout-container">
@@ -98,7 +134,7 @@ const renderCartItems = () => (
       <div className="checkout-grid">
         <div className="order-summary">
           <h2>Seu Carrinho</h2>
-          {cartItems.length > 0 ? renderCartItems() : <p>Seu carrinho está vazio</p>}
+          {renderCartItems()}
         </div>
 
         <div className="delivery-payment">
@@ -192,6 +228,7 @@ const renderCartItems = () => (
                     value={deliveryData.state}
                     onChange={handleInputChange}
                     maxLength="2"
+                    placeholder="SP"
                     required
                   />
                 </div>
@@ -202,10 +239,15 @@ const renderCartItems = () => (
           <div className="order-total-section">
             <button 
               onClick={handleCheckout}
-              disabled={isLoading || !deliveryData.cep || !deliveryData.address || !deliveryData.number}
+              disabled={isLoading || !deliveryData.cep || !deliveryData.address || !deliveryData.number || !cartItems || cartItems.length === 0}
               className="checkout-btn"
             >
-              {isLoading ? 'Processando...' : 'Finalizar Compra'}
+              {isLoading ? (
+                <>
+                  <span className="spinner"></span>
+                  Processando...
+                </>
+              ) : 'Finalizar Compra'}
             </button>
           </div>
         </div>

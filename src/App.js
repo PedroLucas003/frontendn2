@@ -51,9 +51,22 @@ function App() {
     }
   }, [error]);
 
-  // Atualiza o localStorage sempre que o carrinho mudar
+  // Persistência do carrinho no localStorage
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cart));
+  }, [cart]);
+
+  // Garante que o carrinho seja salvo mesmo ao recarregar a página
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      localStorage.setItem('cart', JSON.stringify(cart));
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
   }, [cart]);
 
   const handleLogin = (token, userData) => {
@@ -109,7 +122,7 @@ function App() {
           isAuthenticated={isAuthenticated} 
           onLogout={handleLogout} 
           user={user} 
-          cartItems={cart.reduce((total, item) => total + item.quantity, 0)}
+          cartItems={cart.reduce((total, item) => total + (item.quantity || 0), 0)}
         />
         
         {error && (
@@ -145,7 +158,11 @@ function App() {
             } />
             
             <Route path="/checkout" element={
-              <CheckoutPage cartItems={cart} updateCart={updateCart} clearCart={clearCart} />
+              <CheckoutPage 
+                cartItems={cart} 
+                updateCart={updateCart} 
+                clearCart={clearCart} 
+              />
             } />
             
             <Route path="/order-success" element={

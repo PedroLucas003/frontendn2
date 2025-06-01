@@ -25,17 +25,19 @@ const LoginPage = ({ onLogin }) => {
           throw new Error('As senhas não coincidem');
         }
 
-        await axios.post(`${API_URL}/api/auth/register`, {
+        const response = await axios.post(`${API_URL}/api/auth/register`, {
           email,
           password
         });
 
-        const loginResponse = await axios.post(`${API_URL}/api/auth/login`, {
-          email,
-          password
-        });
-
-        onLogin(loginResponse.data.token, loginResponse.data.user);
+        onLogin(response.data.token, response.data.user);
+        
+        // Redireciona após o registro
+        if (response.data.user.isAdmin) {
+          navigate('/dashboard');
+        } else {
+          navigate('/');
+        }
       } else {
         const response = await axios.post(`${API_URL}/api/auth/login`, {
           email,
@@ -43,9 +45,14 @@ const LoginPage = ({ onLogin }) => {
         });
 
         onLogin(response.data.token, response.data.user);
+        
+        // Redireciona após o login
+        if (response.data.user.isAdmin) {
+          navigate('/dashboard');
+        } else {
+          navigate('/');
+        }
       }
-
-      navigate('/dashboard');
     } catch (error) {
       setError(error.response?.data?.error || error.message || 'Ocorreu um erro. Tente novamente.');
       console.error('Erro:', error);

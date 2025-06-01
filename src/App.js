@@ -51,6 +51,7 @@ function App() {
     }
   }, [error]);
 
+  // Atualiza o localStorage sempre que o carrinho mudar
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cart));
   }, [cart]);
@@ -123,13 +124,11 @@ function App() {
             <Route path="/" element={
               <>
                 <HeroBanner />
-                <section id="cervejas-section" className="cervejas-section-wrapper">
-                  <Cervejas 
-                    cart={cart} 
-                    addToCart={addToCart} 
-                    updateCart={updateCart} 
-                  />
-                </section>
+                <Cervejas 
+                  cart={cart} 
+                  addToCart={addToCart} 
+                  updateCart={updateCart} 
+                />
               </>
             } />
             

@@ -6,66 +6,19 @@ import './Cervejas.css';
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const Cervejas = () => {
-  const [stock, setStock] = useState({
-    'IPA': 0,
-    'Stout': 0,
-    'Weiss': 0,
-    'Pilsen': 0
-  });
-  const [loading, setLoading] = useState(false);
+  const [cervejas, setCervejas] = useState([]);
+  const [stock, setStock] = useState({});
+  const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState([]);
   const [showCart, setShowCart] = useState(false);
   const navigate = useNavigate();
 
-  const cervejas = [
-    {
-      id: 1,
-      nome: "Virada IPA",
-      tipo: "India Pale Ale",
-      beerType: "IPA",
-      descricao: "Amarga e aromática com notas cítricas e de pinho. Uma homenagem aos mestres cervejeiros que iniciaram nossa tradição em 1923.",
-      imagem: "https://images.unsplash.com/photo-1566633806327-68e152aaf26d?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80",
-      teor: "3.0% ABV",
-      ano: "1923"
-    },
-    {
-      id: 2,
-      nome: "Virada Stout",
-      tipo: "Stout Imperial",
-      beerType: "Stout",
-      descricao: "Negra e cremosa com aromas de café torrado e chocolate. Receita original desde 1918, mantida em nossos arquivos secretos.",
-      imagem: "https://images.unsplash.com/photo-1566633806327-68e152aaf26d?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80",
-      teor: "8.2% ABV",
-      ano: "1918"
-    },
-    {
-      id: 3,
-      nome: "Virada Weiss",
-      tipo: "Weissbier Tradicional",
-      beerType: "Weiss",
-      descricao: "Refrescante com notas de banana e cravo. Introduzida em 1932 por um mestre cervejeiro alemão que se juntou à nossa equipe.",
-      imagem: "https://images.unsplash.com/photo-1600788886242-5c96aabe3757?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80",
-      teor: "5.0% ABV",
-      ano: "1932"
-    },
-    {
-      id: 4,
-      nome: "Virada Pilsen",
-      tipo: "Pilsen Premium",
-      beerType: "Pilsen",
-      descricao: "Clássica e refrescante com amargor equilibrado. Nossa primeira receita, criada pelos fundadores em 1905.",
-      imagem: "https://images.unsplash.com/photo-1600788886242-5c96aabe3757?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80",
-      teor: "4.8% ABV",
-      ano: "1905"
-    }
-  ];
-
   const addToCart = (cerveja) => {
     setCart(prevCart => {
-      const existingItem = prevCart.find(item => item.id === cerveja.id);
+      const existingItem = prevCart.find(item => item._id === cerveja._id);
       if (existingItem) {
         return prevCart.map(item =>
-          item.id === cerveja.id 
+          item._id === cerveja._id 
             ? { ...item, quantity: item.quantity + 1 } 
             : item
         );
@@ -77,7 +30,7 @@ const Cervejas = () => {
   };
 
   const removeFromCart = (id) => {
-    setCart(prevCart => prevCart.filter(item => item.id !== id));
+    setCart(prevCart => prevCart.filter(item => item._id !== id));
   };
 
   const updateQuantity = (id, newQuantity) => {
@@ -87,7 +40,7 @@ const Cervejas = () => {
     }
     setCart(prevCart =>
       prevCart.map(item =>
-        item.id === id ? { ...item, quantity: newQuantity } : item
+        item._id === id ? { ...item, quantity: newQuantity } : item
       )
     );
   };
@@ -98,8 +51,7 @@ const Cervejas = () => {
 
   const getTotalPrice = () => {
     return cart.reduce((total, item) => {
-      const price = 15.90;
-      return total + (price * item.quantity);
+      return total + (item.price * item.quantity);
     }, 0).toFixed(2);
   };
 
@@ -108,33 +60,52 @@ const Cervejas = () => {
   };
 
   useEffect(() => {
-    const fetchStock = async () => {
+    const fetchBeers = async () => {
       try {
         setLoading(true);
         const response = await axios.get(`${API_URL}/api/beers`);
         
-        const newStock = {
-          'IPA': 0,
-          'Stout': 0,
-          'Weiss': 0,
-          'Pilsen': 0
-        };
+        // Transforma os dados da API para o formato esperado pelo frontend
+        const formattedBeers = response.data.map(beer => ({
+          _id: beer._id,
+          nome: `Virada ${beer.beerType}`,
+          tipo: beer.beerType,
+          beerType: beer.beerType,
+          descricao: beer.description,
+          imagem: getBeerImage(beer.beerType),
+          teor: beer.alcoholContent,
+          ano: beer.yearCreated,
+          price: beer.price
+        }));
         
+        setCervejas(formattedBeers);
+        
+        // Cria o objeto de estoque
+        const newStock = {};
         response.data.forEach(beer => {
-          if (newStock.hasOwnProperty(beer.beerType)) {
-            newStock[beer.beerType] = beer.quantity;
-          }
+          newStock[beer.beerType] = beer.quantity;
         });
         
         setStock(newStock);
       } catch (error) {
-        console.error('Erro ao buscar estoque:', error);
+        console.error('Erro ao buscar cervejas:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchStock();
+    // Função auxiliar para obter imagem baseada no tipo de cerveja
+    const getBeerImage = (beerType) => {
+      const images = {
+        'IPA': 'https://images.unsplash.com/photo-1566633806327-68e152aaf26d?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80',
+        'Stout': 'https://images.unsplash.com/photo-1566633806327-68e152aaf26d?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80',
+        'Weiss': 'https://images.unsplash.com/photo-1600788886242-5c96aabe3757?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80',
+        'Pilsen': 'https://images.unsplash.com/photo-1600788886242-5c96aabe3757?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80'
+      };
+      return images[beerType] || 'https://via.placeholder.com/400x500.png?text=Garrafa+Virada';
+    };
+
+    fetchBeers();
 
     const setupAnimation = () => {
       const cards = document.querySelectorAll('.cerveja-card');
@@ -160,20 +131,19 @@ const Cervejas = () => {
   }, []);
 
   return (
-  <section className="cervejas-section">
-    {/* Removi o id daqui pois agora está na section wrapper no App.js */}
-    <h2 className="section-title">Nossas <span className="destaque">Cervejas</span> Históricas</h2>
+    <section id="cervejas-section" className="cervejas-section">
+      <h2 className="section-title">Nossas <span className="destaque">Cervejas</span> Históricas</h2>
 
       {loading && (
         <div className="loading-indicator">
           <div className="spinner"></div>
-          <p>Atualizando estoque...</p>
+          <p>Carregando cervejas...</p>
         </div>
       )}
 
       <div className="cervejas-grid">
         {cervejas.map((cerveja) => (
-          <div key={cerveja.id} className="cerveja-card">
+          <div key={cerveja._id} className="cerveja-card">
             <div className="cerveja-imagem-container">
               <img
                 src={cerveja.imagem}
@@ -209,6 +179,7 @@ const Cervejas = () => {
                 </span>
               </div>
               <span className="cerveja-teor">{cerveja.teor}</span>
+              <span className="cerveja-price">R$ {cerveja.price.toFixed(2)}</span>
             </div>
           </div>
         ))}
@@ -236,26 +207,26 @@ const Cervejas = () => {
           <>
             <div className="cart-items">
               {cart.map(item => (
-                <div key={item.id} className="cart-item">
+                <div key={item._id} className="cart-item">
                   <img src={item.imagem} alt={item.nome} className="cart-item-image" />
                   <div className="cart-item-details">
                     <h4>{item.nome}</h4>
                     <p className="cart-item-type">{item.tipo}</p>
                     <div className="cart-item-quantity">
-                      <button onClick={() => updateQuantity(item.id, item.quantity - 1)}>
+                      <button onClick={() => updateQuantity(item._id, item.quantity - 1)}>
                         <i className="fas fa-minus"></i>
                       </button>
                       <span>{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.id, item.quantity + 1)}>
+                      <button onClick={() => updateQuantity(item._id, item.quantity + 1)}>
                         <i className="fas fa-plus"></i>
                       </button>
                     </div>
                   </div>
                   <div className="cart-item-price">
-                    R$ {(15.90 * item.quantity).toFixed(2)}
+                    R$ {(item.price * item.quantity).toFixed(2)}
                     <button 
                       className="remove-item" 
-                      onClick={() => removeFromCart(item.id)}
+                      onClick={() => removeFromCart(item._id)}
                     >
                       <i className="fas fa-trash"></i>
                     </button>

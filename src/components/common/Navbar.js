@@ -25,23 +25,27 @@ const Navbar = ({ isAuthenticated, onLogout, user }) => {
 
         {isAuthenticated ? (
           <>
-            <Link to="/dashboard">Dashboard</Link>
+            {/* Mostra Dashboard apenas para admin */}
+            {user?.isAdmin && (
+              <Link to="/dashboard">Dashboard</Link>
+            )}
+            
             <span className="user-email">{user?.email}</span>
             <button onClick={onLogout} className="logout-btn">
               <span className="button-icon">←</span>
               <span className="button-text">Sair</span>
             </button>
+            
+            {/* Mostra Gerenciar Usuários apenas para admin */}
+            {user?.isAdmin && (
+              <Link to="/users">Gerenciar Usuários</Link>
+            )}
           </>
         ) : (
           <Link to="/login" className="login-link">
             <span className="button-icon">→</span>
             <span className="button-text">Login</span>
           </Link>
-        )}
-        {isAuthenticated && (
-          <li>
-            <Link to="/users">Gerenciar Usuários</Link>
-          </li>
         )}
       </div>
     </nav>

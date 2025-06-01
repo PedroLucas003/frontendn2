@@ -124,11 +124,14 @@ function App() {
             <Route path="/" element={
               <>
                 <HeroBanner />
-                <Cervejas 
-                  cart={cart} 
-                  addToCart={addToCart} 
-                  updateCart={updateCart} 
-                />
+                {/* Adicionamos uma div wrapper com o ID que o HeroBanner procura */}
+                <div id="cervejas-section" className="cervejas-section-wrapper">
+                  <Cervejas 
+                    cart={cart} 
+                    addToCart={addToCart} 
+                    updateCart={updateCart} 
+                  />
+                </div>
               </>
             } />
             

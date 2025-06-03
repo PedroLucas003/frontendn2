@@ -10,6 +10,7 @@ import LoginPage from './components/home/LoginPage';
 import UserDashboard from './components/users/UserDashboard';
 import CheckoutPage from './components/checkout/CheckoutPage';
 import OrderSuccessPage from './components/checkout/OrderSuccessPage';
+import EditUserPage from './components/users/EditUserPage';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -111,70 +112,81 @@ function App() {
     );
   }
 
-  return (
-    <div className="App">
-      <Navbar 
-        isAuthenticated={isAuthenticated} 
-        onLogout={handleLogout} 
-        user={user} 
-        cartItems={cart.reduce((total, item) => total + item.quantity, 0)}
-      />
-      
-      {error && (
-        <div className="global-error">
-          {error}
-          <button onClick={() => setError(null)}>×</button>
-        </div>
-      )}
-      
-      <main className="main-content">
-        <Routes>
-          <Route path="/" element={
-            <>
-              <HeroBanner />
-              <Cervejas 
-                cart={cart} 
-                addToCart={addToCart} 
-                updateCart={updateCart} 
-              />
-            </>
-          } />
-          
-          <Route path="/login" element={
-            isAuthenticated ? <Navigate to="/" replace /> : <LoginPage onLogin={handleLogin} />
-          } />
-          
-          <Route path="/dashboard" element={
-            isAuthenticated && user?.isAdmin ? (
-              <BeerDashboard user={user} />
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          } />
-          
-          <Route path="/users" element={
-            isAuthenticated && user?.isAdmin ? (
-              <UserDashboard user={user} />
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          } />
-          
-          <Route path="/checkout" element={
-            <CheckoutPage cartItems={cart} updateCart={updateCart} clearCart={clearCart} />
-          } />
-          
-          <Route path="/order-success" element={
-            <OrderSuccessPage clearCart={clearCart} />
-          } />
-          
-          <Route path="*" element={
-            <Navigate to="/" replace />
-          } />
-        </Routes>
-      </main>
-    </div>
-  );
+  // ... (código anterior permanece o mesmo)
+
+return (
+  <div className="App">
+    <Navbar 
+      isAuthenticated={isAuthenticated} 
+      onLogout={handleLogout} 
+      user={user} 
+      cartItems={cart.reduce((total, item) => total + item.quantity, 0)}
+    />
+    
+    {error && (
+      <div className="global-error">
+        {error}
+        <button onClick={() => setError(null)}>×</button>
+      </div>
+    )}
+    
+    <main className="main-content">
+      <Routes>
+        <Route path="/" element={
+          <>
+            <HeroBanner />
+            <Cervejas 
+              cart={cart} 
+              addToCart={addToCart} 
+              updateCart={updateCart} 
+            />
+          </>
+        } />
+        
+        <Route path="/login" element={
+          isAuthenticated ? <Navigate to="/" replace /> : <LoginPage onLogin={handleLogin} />
+        } />
+        
+        <Route path="/dashboard" element={
+          isAuthenticated && user?.isAdmin ? (
+            <BeerDashboard user={user} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        } />
+        
+        <Route path="/users" element={
+          isAuthenticated && user?.isAdmin ? (
+            <UserDashboard user={user} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        } />
+
+        {/* Adicione esta nova rota */}
+        <Route path="/users/edit/:id" element={
+          isAuthenticated && user?.isAdmin ? (
+            <EditUserPage user={user} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        } />
+        
+        <Route path="/checkout" element={
+          <CheckoutPage cartItems={cart} updateCart={updateCart} clearCart={clearCart} />
+        } />
+        
+        <Route path="/order-success" element={
+          <OrderSuccessPage clearCart={clearCart} />
+        } />
+        
+        <Route path="*" element={
+          <Navigate to="/" replace />
+        } />
+      </Routes>
+    </main>
+  </div>
+);
 }
 
 export default AppWrapper;

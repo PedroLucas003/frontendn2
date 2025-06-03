@@ -9,8 +9,8 @@ const UserDashboard = ({ user }) => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [searchTerm, setSearchTerm] = useState('');
     const [successMessage, setSuccessMessage] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -50,8 +50,16 @@ const UserDashboard = ({ user }) => {
         }
     };
 
-    const filteredUsers = users.filter(user =>
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    const handleEdit = (userId) => {
+        navigate(`/users/edit/${userId}`);
+    };
+
+    const handleAddUser = () => {
+        navigate('/register'); // Ou crie uma rota específica /users/new
+    };
+
+    const filteredUsers = users.filter(userItem =>
+        userItem.email.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     if (loading) {
@@ -90,7 +98,7 @@ const UserDashboard = ({ user }) => {
                     className="search-input"
                 />
                 <button
-                    onClick={() => navigate('/users/new')}
+                    onClick={handleAddUser}
                     className="add-user-btn"
                 >
                     + Adicionar Usuário
@@ -109,10 +117,11 @@ const UserDashboard = ({ user }) => {
                                 <h3>{u.email}</h3>
                                 <p>Registrado em: {new Date(u.createdAt).toLocaleDateString()}</p>
                                 {user?._id === u._id && <span className="current-user">Você</span>}
+                                {u.isAdmin && <span className="admin-badge">Admin</span>}
                             </div>
                             <div className="user-actions">
                                 <button
-                                    onClick={() => navigate(`/users/edit/${u._id}`)}
+                                    onClick={() => handleEdit(u._id)}
                                     className="edit-btn"
                                     disabled={user?._id === u._id}
                                 >
